@@ -20,6 +20,10 @@ you may need to make when updating an SVN::Web installation.
 
 Fix for RT35186, to make 'selected' compliant with XHTML
 
+=item
+
+Fix for RT37388, by Vladimir Timofeev
+
 =back
 
 =head2 0.53, released Apr 29, 2007
