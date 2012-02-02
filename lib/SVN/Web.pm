@@ -28,7 +28,7 @@ SVN::Web::I18N::loc_lang('en');
 use constant mod_perl_2 =>
     (exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2);
 
-our $VERSION = 0.53;
+our $VERSION = 0.54;
 
 my $template;
 my $config;
