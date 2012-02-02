@@ -12,6 +12,16 @@ This is a list of the main changes between different versions of
 SVN::Web.  Please see L<UPDATING.pod> for details about any changes
 you may need to make when updating an SVN::Web installation.
 
+=head2 0.54, release pending
+
+=over
+
+=item
+
+Fix for RT35186, to make 'selected' compliant with XHTML
+
+=back
+
 =head2 0.53, released Apr 29, 2007
 
 =over
