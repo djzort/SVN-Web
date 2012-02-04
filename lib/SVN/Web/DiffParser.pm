@@ -298,22 +298,8 @@ sub _unified_line
     }
     die "Missing +++ line before $line" 
 	unless exists $change->{filename2} and defined $change->{filename2};
-    if( $line =~ /^\@\@ -(\d+),(\d+) [+](\d+),(\d+) \@\@$/ ) {
-        my @match = ($1, $2, $3, $4);
-        if( @{ $change->{lines} } ) {
-            $change = $self->_new_chunk;
-        }
-        @{ $change }{ qw( line1 size1 line2 size2 ) } = @match;
-        $change->{at1} = $change->{line1};
-        $change->{at2} = $change->{line2};
-        return;
-    }
-
-    # Files that have been newly added and only contain one line have
-    # a hunk marker that looks like "@@ -0,0 +1 @@". Handle that.
-    # This code should be refactored with the code above, since only
-    # the regexp and the assignment to @match are different.
-    if( $line =~ /^\@\@ -(\d+),(\d+) [+](\d+) \@\@$/ ) {
+    my @match = $self->_detect_hunk_line( $line );
+    if(@match) {
         my @match = ($1, $2, $3, 1);
         if( @{ $change->{lines} } ) {
             $change = $self->_new_chunk;
@@ -336,6 +322,34 @@ sub _unified_line
     # Anything else is the end of the diff, so fall through to the
     # diff detection bit
     $self->{state}{unified} = 0;
+}
+
+sub _detect_hunk_line
+{
+    my( $self, $line ) = @_;
+    # pretty standard change
+    # "@@ -l1,n1 +l2,n2 @@"
+    if( $line =~ /^\@\@ -(\d+),(\d+) [+](\d+),(\d+) \@\@$/ ) {
+        return ($1, $2, $3, $4);
+    }
+
+    # New files with only one line.
+    # "@@ -0,0 +1 @@"
+    if( $line =~ /^\@\@ -(\d+),(\d+) [+](\d+) \@\@$/ ) {
+        return ($1, $2, $3, 1);
+    }
+    # Files that are only one line long, but get changed.
+    # "@@ -1 +1 @@"
+    if( $line =~ /^\@\@ -(\d+) [+](\d+) \@\@$/ ) {
+        return ($1, 1, $2, 1);
+    }
+    # Files that are only one line long, and get new line.
+    # "@@ -1 +1,n @@"
+    if( $line =~ /^\@\@ -(\d+) [+](\d+),(\d+) \@\@$/ ) {
+        return ($1, 1, $2, $3);
+    }
+
+    return ();
 }
 
 sub _new_type
