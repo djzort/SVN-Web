@@ -300,7 +300,6 @@ sub _unified_line
 	unless exists $change->{filename2} and defined $change->{filename2};
     my @match = $self->_detect_hunk_line( $line );
     if(@match) {
-        my @match = ($1, $2, $3, 1);
         if( @{ $change->{lines} } ) {
             $change = $self->_new_chunk;
         }
