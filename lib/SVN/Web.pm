@@ -11,6 +11,7 @@ use YAML ();
 use Template;
 use File::Spec;
 use POSIX ();
+use Plack::Request;
 
 use SVN::Web::X;
 use FindBin;
@@ -370,6 +371,42 @@ sub cgi_output {
     }
 }
 
+sub psgi_output {
+    my($cfg, $html) = @_;
+
+    return unless defined $html;
+
+    my @cookies = ();
+    push @cookies, $cfg->{cgi}->cookie(-name  => 'svnweb-lang',
+				       -value => $cfg->{lang},
+				      );
+
+    if(ref($html)) {
+        print $cfg->{cgi}->header(
+            -charset => $html->{charset}  || 'UTF-8',
+            -type    => $html->{mimetype} || 'text/html',
+	    -cookie  => \@cookies,
+        );
+
+	$cfg->{path} = encode_path($cfg->{path});
+        if($html->{template}) {
+            $template->process($html->{template}, {
+		c => $cfg,
+		%{ $html->{data} }
+	    }) or die "Template::process() error: " . $template->error;
+        } else {
+            print $html->{body};
+        }
+    } else {
+        print $cfg->{cgi}->header(
+            -charset => 'UTF-8',
+            -type    => 'text/html',
+	    -cookie  => \@cookies,
+        );
+        print $html;
+    }
+}
+
 sub mod_perl_output {
     my($cfg, $html) = @_;
 
@@ -533,68 +570,26 @@ sub run_cgi {
 }
 
 sub run_psgi {
-    my %opts = @_;
-    die $@ if $@;
+
+    my $env = shift;
+
+    my $req = Plack::Request->new($env);
 
     load_config('config.yaml');
 
     $config->{$_}             = $opts{$_} foreach keys %opts;
     $template               ||= get_template();
 
-    # Pull in the configured CGI class.  Propogate any errors back, and
-    # call the correct import() routine.
-    #
-    # This is more complicated than it should be.  If $config->{cgi_class}
-    # is defined then use that.  If not, use CGI::Fast.  If that can't be
-    # loaded then use CGI.
-    #
-    # There's a problem with (at least) CGI::Fast.  It's possible for the
-    # require() to fail, but for CGI::Fast's entry in %INC to be populated.
-    # This seems to happen when CGI::Fast loads, but its dependency (such
-    # as FCGI) fails to load.  So if the require() fails for any reason
-    # we explicitly remove the %INC entry.
+    my($html, $cfg);
 
-    my $cgi_class;
-    my $eval_result;
-
-    if(exists $config->{cgi_class}) {
-        $eval_result = eval "require $config->{cgi_class}";
-        die $@ if $@;
-        $cgi_class = $config->{cgi_class};
-    } else {
-        foreach('CGI::Fast', 'CGI') {
-            $eval_result = eval "require $_";
-            if($@) {
-                my $path = $_;
-		my @path_components = split('::', $path);
-		$path = File::Spec->catfile(@path_components);
-                $path .= '.pm';
-                delete $INC{$path};
-            } else {
-                $cgi_class = $_;
-                last;
-            }
-        }
-    }
-
-    die "Could not load a CGI class" unless $eval_result;
-    $cgi_class->import();
-
-    # Save the selected module so that future calls to this routine
-    # don't waste time trying to find the correct class.
-    $config->{cgi_class} = $cgi_class unless exists $config->{cgi_class};
-
-    while(my $cgi = $cgi_class->new) {
-        my($html, $cfg);
-
-	$cfg = {
+    $cfg = {
 	    style     => $config->{style},
 	    cgi       => $cgi,
 	    languages => $config->{languages},
-	};
+    };
 
         eval {
-	    my($action, $base, $repo, $script, $path) = crack_url($cgi);
+	    my($action, $base, $repo, $script, $path) = crack_url($req);
 
             SVN::Web::X->throw(
                 error => '(action %1 not supported)',
@@ -624,8 +619,6 @@ sub run_psgi {
         }
 
         cgi_output($cfg, $html);
-        last if $cgi_class eq 'CGI';
-    }
 }
 
 sub loc_filter {
@@ -641,7 +634,10 @@ sub crack_url {
 
 #    warn "REF: ", ref($obj), "\n";
 
-    my($location, $filename, $path_info, $uri);
+    my $location = $obj->path;
+    my $filename = '';
+    my $path_info = $req->path_info;
+    my $uri = $obj->request_uri;
 
     if(ref($obj) eq 'Apache' or ref($obj) eq 'Apache2::RequestRec') {
 	$location  = $obj->location();
@@ -743,36 +739,8 @@ sub crack_url {
     # is CGI then it's something like 'http://host//svnweb/index.cgi'.
     # If it's an Apache handler then it will be a directory reference,
     # like '/svnweb', or possibly '/'.
-    #
-    # In the CGI case this is just the SCRIPT_NAME environment
-    # variable.  There's no Apache equivalent, so for Apache 1 take
-    # the URI, prepend the protocol, host, and port, then starting
-    # from the right end, remove the path, the action, and the
-    # repository name.  The result is the root URI for the handler.
-    #
-    # For Apache 2 use Apache2::URI::construct_url() to get the full
-    # URL (without the query string), and then perform the same
-    # substitutions as for the Apache 1 case.
-    if(ref($obj) eq 'Apache') {
-	my $port = $obj->server()->port();
 
-	$script = sprintf('%s://%s:%s%s',
-			  $port == 443 ? 'https' : 'http',
-			  $obj->server()->server_hostname(),
-			  $port,
-			  $uri);
-	$script =~ s{$path/?$}{};
-	$script =~ s{/$action$}{};
-	$script =~ s{/$repo$}{};
-    } elsif(ref($obj) eq 'Apache2::RequestRec') {
-	$script = $obj->construct_url();
-	$script =~ s{$path/?$}{};
-	$script =~ s{/$action$}{};
-	$script =~ s{/$repo$}{};
-    } else {
-	$script = $ENV{SCRIPT_NAME};
-    }
-
+    $script = $obj->script_name;
     $script =~ s{/$}{};		# Remove trailing slash
 
 #    warn "SCRIPT: $script\n";
