@@ -1,3 +1,4 @@
+#!/bin/false
 package SVN::Web;
 
 use strict;
@@ -436,6 +437,102 @@ sub get_template {
 }
 
 sub run_cgi {
+    my %opts = @_;
+    die $@ if $@;
+
+    load_config('config.yaml');
+
+    $config->{$_}             = $opts{$_} foreach keys %opts;
+    $template               ||= get_template();
+
+    # Pull in the configured CGI class.  Propogate any errors back, and
+    # call the correct import() routine.
+    #
+    # This is more complicated than it should be.  If $config->{cgi_class}
+    # is defined then use that.  If not, use CGI::Fast.  If that can't be
+    # loaded then use CGI.
+    #
+    # There's a problem with (at least) CGI::Fast.  It's possible for the
+    # require() to fail, but for CGI::Fast's entry in %INC to be populated.
+    # This seems to happen when CGI::Fast loads, but its dependency (such
+    # as FCGI) fails to load.  So if the require() fails for any reason
+    # we explicitly remove the %INC entry.
+
+    my $cgi_class;
+    my $eval_result;
+
+    if(exists $config->{cgi_class}) {
+        $eval_result = eval "require $config->{cgi_class}";
+        die $@ if $@;
+        $cgi_class = $config->{cgi_class};
+    } else {
+        foreach('CGI::Fast', 'CGI') {
+            $eval_result = eval "require $_";
+            if($@) {
+                my $path = $_;
+		my @path_components = split('::', $path);
+		$path = File::Spec->catfile(@path_components);
+                $path .= '.pm';
+                delete $INC{$path};
+            } else {
+                $cgi_class = $_;
+                last;
+            }
+        }
+    }
+
+    die "Could not load a CGI class" unless $eval_result;
+    $cgi_class->import();
+
+    # Save the selected module so that future calls to this routine
+    # don't waste time trying to find the correct class.
+    $config->{cgi_class} = $cgi_class unless exists $config->{cgi_class};
+
+    while(my $cgi = $cgi_class->new) {
+        my($html, $cfg);
+
+	$cfg = {
+	    style     => $config->{style},
+	    cgi       => $cgi,
+	    languages => $config->{languages},
+	};
+
+        eval {
+	    my($action, $base, $repo, $script, $path) = crack_url($cgi);
+
+            SVN::Web::X->throw(
+                error => '(action %1 not supported)',
+                vars  => [$action]
+	    ) unless exists $config->{actions}{ lc($action) };
+
+            $cfg->{repos}    = $repo;
+	    $cfg->{action}   = $action;
+	    $cfg->{path}     = $path;
+	    $cfg->{script}   = $script;
+	    $cfg->{base_uri} = $base;
+	    $cfg->{self_uri} = $cgi->self_url();
+	    $cfg->{config}   = $config;
+
+            $html = run($cfg);
+        };
+
+        my $e;
+        if($e = SVN::Web::X->caught()) {
+            $html->{template} = 'x';
+            $html->{data}{error_msg} = SVN::Web::I18N::loc($e->error(), @{ $e->vars() });
+        } else {
+            if($@) {
+                $html->{template} = 'x';
+                $html->{data}{error_msg} = $@;
+            }
+        }
+
+        cgi_output($cfg, $html);
+        last if $cgi_class eq 'CGI';
+    }
+}
+
+sub run_psgi {
     my %opts = @_;
     die $@ if $@;
 
@@ -1667,11 +1764,15 @@ Chia-liang Kao C<< <clkao@clkao.org> >>
 
 Nik Clayton C<< <nik@FreeBSD.org> >>
 
+Dean Hamstead C<< <dean@fragfest.com.au> >>
+
 =head1 COPYRIGHT
 
 Copyright 2003-2004 by Chia-liang Kao C<< <clkao@clkao.org> >>.
 
 Copyright 2005-2007 by Nik Clayton C<< <nik@FreeBSD.org> >>.
+
+Copyright 2012 by Dean Hamstead C<< <dean@fragfest.com.au> >>.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
