@@ -12,7 +12,17 @@ This is a list of the main changes between different versions of
 SVN::Web.  Please see L<UPDATING.pod> for details about any changes
 you may need to make when updating an SVN::Web installation.
 
-=head2 0.54, release pending
+=head2 0.60, pending release
+
+=over
+
+=item
+
+Pulled out mod_perl1/2 and cgi, replaced with Plack
+
+=back
+
+=head2 0.54, never released
 
 =over
 
