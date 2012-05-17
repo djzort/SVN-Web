@@ -66,21 +66,22 @@ None.
 
 =cut
 
-my %default_opts = (redirect_to_browse_when_one_repo => 0);
+my %default_opts = ( redirect_to_browse_when_one_repo => 0 );
 
 sub run {
     my $self = shift;
 
     $self->{opts} = { %default_opts, %{ $self->{opts} } };
 
-    my %repos = repos_list($self->{config});
+    my %repos = repos_list( $self->{config} );
 
     # If there's only one repo listed then jump straight to it
-    if(keys %repos == 1 and $self->{opts}{redirect_to_browse_when_one_repo}) {
+    if ( keys %repos == 1 and $self->{opts}{redirect_to_browse_when_one_repo} )
+    {
         my $url = $self->{cgi}->self_url();
         $url =~ s{/$}{};
-        $url .= '/' . (keys %repos)[0];
-        print $self->{cgi}->redirect(-uri => $url);
+        $url .= '/' . ( keys %repos )[0];
+        print $self->{cgi}->redirect( -uri => $url );
         return;
     }
 
@@ -99,19 +100,26 @@ sub repos_list {
     my $config = shift;
 
     my %repos;
-    if($config->{reposparent}) {
+    if ( $config->{reposparent} ) {
         opendir my $dh, "$config->{reposparent}"
-            or SVN::Web::X->throw(
+          or SVN::Web::X->throw(
             error => '(opendir reposparent %1 %2)',
-            vars  => [$config->{reposparent}, $!]
-            );
+            vars  => [ $config->{reposparent}, $! ]
+          );
 
-        foreach my $dir (grep { -d File::Spec->catdir($config->{reposparent}, $_) && !/^\./ }
-            readdir $dh) {
-	    $repos{$dir} = 'file://' . File::Spec->catdir($config->{reposparent}, $dir);
+        foreach my $dir (
+            grep {
+                -d File::Spec->catdir( $config->{reposparent}, $_ )
+                  && !/^\./
+            } readdir $dh
+          )
+        {
+            $repos{$dir} =
+              'file://' . File::Spec->catdir( $config->{reposparent}, $dir );
         }
-    } else {
-	%repos = %{ $config->{repos} };
+    }
+    else {
+        %repos = %{ $config->{repos} };
     }
 
     delete @repos{ @{ $config->{block} } } if exists $config->{block};

@@ -66,7 +66,7 @@ See L<SVN::Web::Log>.
 
 =cut
 
-my %default_opts = (publisher => '');
+my %default_opts = ( publisher => '' );
 
 # <dc:date> elements have a specific format that we must use, overriding
 # the user's choice
@@ -76,7 +76,7 @@ sub format_svn_timestamp {
 
     my $time = SVN::Core::time_from_cstring($cstring) / 1_000_000;
 
-    return POSIX::strftime('%Y-%m-%dT%H:%M:%S', gmtime($time));
+    return POSIX::strftime( '%Y-%m-%dT%H:%M:%S', gmtime($time) );
 }
 
 sub run {
@@ -88,10 +88,8 @@ sub run {
 
     return {
         template => 'rss',
-	mimetype => 'text/xml',
-        data     => { %{$data},
-		      publisher => $self->{opts}{publisher},
-		    }
+        mimetype => 'text/xml',
+        data     => { %{$data}, publisher => $self->{opts}{publisher}, }
     };
 }
 

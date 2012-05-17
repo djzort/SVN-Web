@@ -24,8 +24,7 @@ use SVN::Web::I18N;
 # any error messages generated *before* it's overridden are generated
 # properly.
 SVN::Web::I18N::add_directory(
-    File::Spec->catdir(substr(__FILE__, 0, -3), 'I18N')
-);
+    File::Spec->catdir( substr( __FILE__, 0, -3 ), 'I18N' ) );
 SVN::Web::I18N::loc_lang('en');
 
 our $VERSION = 0.60;
@@ -43,45 +42,48 @@ sub load_config {
 }
 
 sub canonicalise_config {
+
     # Catch missing / incorrect 'version' entries
     die "Config file does not define a 'version' key."
-    unless exists $config->{version} and defined $config->{version};
+      unless exists $config->{version} and defined $config->{version};
 
-    die "Configuration file version ($config->{version}) does not match SVN::Web version ($VERSION)"
-    if $config->{version} != $VERSION;
+    die
+"Configuration file version ($config->{version}) does not match SVN::Web version ($VERSION)"
+      if $config->{version} != $VERSION;
 
     # Deal with possibly conflicting 'templatedir' and 'templatedirs' settings.
 
     # If neither of them are set, use 'templatedirs'
-    if(!exists $config->{templatedir} and !exists $config->{templatedirs}) {
-        $config->{templatedirs} = [File::Spec->catdir(qw(template trac))];
+    if ( !exists $config->{templatedir} and !exists $config->{templatedirs} ) {
+        $config->{templatedirs} = [ File::Spec->catdir(qw(template trac)) ];
     }
 
     # If 'templatedir' is the only one set, use it.
-    if(exists $config->{templatedir} and !exists $config->{templatedirs}) {
-        $config->{templatedirs} = [$config->{templatedir}];
+    if ( exists $config->{templatedir} and !exists $config->{templatedirs} ) {
+        $config->{templatedirs} = [ $config->{templatedir} ];
         delete $config->{templatedir};
     }
 
     # If they're both set then throw an error
-    if(exists $config->{templatedir} and exists $config->{templatedirs}) {
+    if ( exists $config->{templatedir} and exists $config->{templatedirs} ) {
         die "templatedir and templatedirs both defined in config.yaml";
     }
 
     # Handle tt_compile_dir.  If it doesn't exist then set it to undef.
     # If it does exist, and is defined, append a '.' and the current
     # real UID, to help ensure uniqueness.
-    if(!exists $config->{tt_compile_dir}) {
+    if ( !exists $config->{tt_compile_dir} ) {
         $config->{tt_compile_dir} = undef;    # undef == no compiling
-    } else {
-        if(defined $config->{tt_compile_dir}) {
+    }
+    else {
+        if ( defined $config->{tt_compile_dir} ) {
             $config->{tt_compile_dir} .= '.' . $<;
         }
     }
 
     # Handle timedate_format
-    if(! exists $config->{timedate_format}) {
-    $config->{timedate_format} = '%Y/%m/%d %H:%M:%S';
+    if ( !exists $config->{timedate_format} ) {
+        $config->{timedate_format} = '%Y/%m/%d %H:%M:%S';
     }
 
     # Set the timezone, if not already specified.
@@ -90,15 +92,15 @@ sub canonicalise_config {
     # If cache/opts/directory_umask is configured, and it has a leading
     # 0 then ensure it's treated as an octal number.
     $config->{cache}{opts}{directory_umask} =
-      oct($config->{cache}{opts}{directory_umask})
-    if exists $config->{cache}{opts}{directory_umask}
-      and $config->{cache}{opts}{directory_umask} =~ /^0/;;
+      oct( $config->{cache}{opts}{directory_umask} )
+      if exists $config->{cache}{opts}{directory_umask}
+          and $config->{cache}{opts}{directory_umask} =~ /^0/;
 
     # Add any additional language directories
-    if(defined $config->{language_dirs}) {
-    foreach my $dir (@{ $config->{language_dirs} }) {
-        SVN::Web::I18N::add_directory($dir);
-    }
+    if ( defined $config->{language_dirs} ) {
+        foreach my $dir ( @{ $config->{language_dirs} } ) {
+            SVN::Web::I18N::add_directory($dir);
+        }
     }
 
     return;
@@ -117,7 +119,7 @@ sub get_config {
 my $repospool = SVN::Pool->new();
 
 sub get_repos {
-    my($repos) = @_;
+    my ($repos) = @_;
 
     SVN::Web::X->throw(
         error => '(unconfigured repository)',
@@ -125,37 +127,41 @@ sub get_repos {
     ) unless exists $config->{repos}{$repos} || $config->{reposparent};
 
     my $repo_uri =
-        $config->{reposparent}
-        ? File::Spec->catdir($config->{reposparent}, $repos)
-        : $config->{repos}{$repos};
+      $config->{reposparent}
+      ? File::Spec->catdir( $config->{reposparent}, $repos )
+      : $config->{repos}{$repos};
 
     SVN::Web::X->throw(
         error => '(no such repo %1 %2)',
-        vars  => [$repos, $repo_uri]
-    ) unless defined $repos and (exists $config->{repos}{$repos} or -e $repo_uri);
+        vars  => [ $repos, $repo_uri ]
+      )
+      unless defined $repos
+          and ( exists $config->{repos}{$repos} or -e $repo_uri );
 
     $repo_uri =~ s{/$}{}g;    # Trim trailing '/', SVN::Repos::open fails
-                # otherwise
+                              # otherwise
 
     # If there's a leading '/' then tack 'file://' on to the start
     $repo_uri = "file://$repo_uri" if $repo_uri =~ m{^/};
 
     eval {
-    $REPOS{$repos}{uri}    ||= $repo_uri;
-    $REPOS{$repos}{ra}     ||= SVN::Ra->new(url  => $repo_uri,
-                        pool => $repospool);
+        $REPOS{$repos}{uri} ||= $repo_uri;
+        $REPOS{$repos}{ra}  ||= SVN::Ra->new(
+            url  => $repo_uri,
+            pool => $repospool
+        );
     };
 
-    if($@) {
+    if ($@) {
         my $e = $@;
         SVN::Web::X->throw(
             error => '(SVN::Client->new() failed: %1 %2)',
-            vars  => [$repo_uri, $e]
+            vars  => [ $repo_uri, $e ]
         );
     }
 
-    if($config->{block}) {
-        foreach my $blocked (@{ $config->{block} }) {
+    if ( $config->{block} ) {
+        foreach my $blocked ( @{ $config->{block} } ) {
             delete $REPOS{$blocked};
         }
     }
@@ -165,25 +171,25 @@ sub get_action {
     my $cfg = shift;
     my $action_pkg;
 
-    if(exists $config->{actions}{ $cfg->{action} }) {
-        if(ref($config->{actions}{ $cfg->{action} }) eq 'HASH') {
-            if(exists $config->{actions}{ $cfg->{action} }{class}) {
+    if ( exists $config->{actions}{ $cfg->{action} } ) {
+        if ( ref( $config->{actions}{ $cfg->{action} } ) eq 'HASH' ) {
+            if ( exists $config->{actions}{ $cfg->{action} }{class} ) {
                 $action_pkg = $config->{actions}{ $cfg->{action} }{class};
             }
         }
     }
 
-    unless($action_pkg) {
+    unless ($action_pkg) {
         $action_pkg = $cfg->{action};
         $action_pkg =~ s{^(\w)}{\U$1};
         $action_pkg = __PACKAGE__ . "::$action_pkg";
     }
 
     eval "require $action_pkg && $action_pkg->can('run')"
-        or SVN::Web::X->throw(
+      or SVN::Web::X->throw(
         error => '(missing package %1 for action %2: %3)',
-        vars  => [$action_pkg, $cfg->{action}, $@]
-    );
+        vars  => [ $action_pkg, $cfg->{action}, $@ ]
+      );
 
     my $repos = $cfg->{repos} ? $REPOS{ $cfg->{repos} } : undef;
 
@@ -202,76 +208,85 @@ sub run {
     my $html;
     my $cache;
 
-    if(defined $config->{cache}{class}) {
-    eval "require $config->{cache}{class}"
-      or SVN::Web::X->throw(error => '(require %1 failed: %2)',
-                vars  => [$config->{cache}{class}, $@]
-                   );
+    if ( defined $config->{cache}{class} ) {
+        eval "require $config->{cache}{class}"
+          or SVN::Web::X->throw(
+            error => '(require %1 failed: %2)',
+            vars  => [ $config->{cache}{class}, $@ ]
+          );
 
-    $config->{cache}{opts} = {}  unless exists $config->{cache}{opts};
-    $config->{cache}{opts}{namespace} = $cfg->{repos};
-    $cache = $config->{cache}{class}->new($config->{cache}{opts});
+        $config->{cache}{opts} = {} unless exists $config->{cache}{opts};
+        $config->{cache}{opts}{namespace} = $cfg->{repos};
+        $cache = $config->{cache}{class}->new( $config->{cache}{opts} );
     }
 
-    if(defined $cfg->{repos} && length $cfg->{repos}) {
-        get_repos($cfg->{repos});
+    if ( defined $cfg->{repos} && length $cfg->{repos} ) {
+        get_repos( $cfg->{repos} );
     }
 
-    if($cfg->{repos} && $REPOS{ $cfg->{repos} }) {
-        @{ $cfg->{navpaths} } = File::Spec::Unix->splitdir($cfg->{path});
+    if ( $cfg->{repos} && $REPOS{ $cfg->{repos} } ) {
+        @{ $cfg->{navpaths} } = File::Spec::Unix->splitdir( $cfg->{path} );
         shift @{ $cfg->{navpaths} };
 
         # should use attribute or things alike
-        $action = get_action({
-        %$cfg,
-        opts => exists $config->{actions}{ $cfg->{action} }{opts}
+        $action = get_action(
+            {
+                %$cfg,
+                opts => exists $config->{actions}{ $cfg->{action} }{opts}
                 ? $config->{actions}{ $cfg->{action} }{opts}
-            : {},
-    });
-    } else {
+                : {},
+            }
+        );
+    }
+    else {
         $cfg->{action} = 'list';
-        $action = get_action({
-        %$cfg,
-        opts => exists $config->{actions}{ $cfg->{action} }{opts}
+        $action = get_action(
+            {
+                %$cfg,
+                opts => exists $config->{actions}{ $cfg->{action} }{opts}
                 ? $config->{actions}{ $cfg->{action} }{opts}
-            : {},
-    });
+                : {},
+            }
+        );
     }
 
     # Determine the language to use
-    my $lang = get_language($cfg->{cgi}, $config->{languages},
-                $config->{default_language});
+    my $lang =
+      get_language( $cfg->{cgi}, $config->{languages},
+        $config->{default_language} );
 
     $cfg->{lang} = $lang;    # Note the preference, stored in a cookie
-                # later
+                             # later
 
-    SVN::Web::I18N::loc_lang($lang); # Set the localisation language
+    SVN::Web::I18N::loc_lang($lang);    # Set the localisation language
 
     # Generate output, from the cache if necessary.
 
     # Does the action support caching?  If so, get the cache key
     my $cache_key;
-    if(defined $cache and $action->can('cache_key')) {
-        $cache_key = join(':', $cfg->{action}, $lang) . ':' . $action->cache_key();
+    if ( defined $cache and $action->can('cache_key') ) {
+        $cache_key =
+          join( ':', $cfg->{action}, $lang ) . ':' . $action->cache_key();
     }
 
     # If there's a key, retrieve the data from the cache
     $html = $cache->get($cache_key) if defined $cache_key;
 
     # No data?  Get the action to generate it, then cache it
-    if(! defined $html) {
-    # Create a default pool for the action's allocation
-    my $pool = SVN::Pool->new_default();
+    if ( !defined $html ) {
 
-    $REPOS{$cfg->{repos}}{client}   = SVN::Client->new(config => {});
+        # Create a default pool for the action's allocation
+        my $pool = SVN::Pool->new_default();
 
-    $html = $action->run();
+        $REPOS{ $cfg->{repos} }{client} = SVN::Client->new( config => {} );
 
-    $pool->clear();
+        $html = $action->run();
 
-    if(defined $cache_key) {
-        $cache->set($cache_key, $html, $cfg->{cache}{expires_in});
-    }
+        $pool->clear();
+
+        if ( defined $cache_key ) {
+            $cache->set( $cache_key, $html, $cfg->{cache}{expires_in} );
+        }
     }
 
     return $html;
@@ -290,30 +305,30 @@ sub get_language {
     #~ # Apache::Request, Apache2::Request, or a CGI object.
     #~ if(defined $lang) {
     #~ if(ref($obj) eq 'Apache::Request') {
-        #~ my $table = $obj->parms();
-        #~ delete $table->{lang};
+    #~ my $table = $obj->parms();
+    #~ delete $table->{lang};
     #~ } elsif(ref($obj) eq 'Apache2::Request') {
-        #~ # Get the query string, remove lang param, replace queue string
-        #~ my $args = $obj->args();
-        #~ $args =~ s/lang = $lang (?:&|;)?//xms;
-        #~ $obj->args($args);
+    #~ # Get the query string, remove lang param, replace queue string
+    #~ my $args = $obj->args();
+    #~ $args =~ s/lang = $lang (?:&|;)?//xms;
+    #~ $obj->args($args);
     #~ } else {
-        #~ $obj->delete('lang'); # Remove from self_url() invocations
+    #~ $obj->delete('lang'); # Remove from self_url() invocations
     #~ }
     #~ }
 
     # If no valid lang=.. param was found then check the user's cookies
 
-    if(! defined $lang) {
+    if ( !defined $lang ) {
         $lang = $obj->cookies->{'svnweb-lang'};
     }
 
     # If $lang is not defined, or if it's not in the hash of valid languages
     # then use the default configured language, falling back to English as
     # a last resort.
-    if(! defined $lang or ! exists $languages->{$lang}) {
-    $lang = $default_lang;
-    $lang = 'en' unless defined $lang;
+    if ( !defined $lang or !exists $languages->{$lang} ) {
+        $lang = $default_lang;
+        $lang = 'en' unless defined $lang;
     }
 
     die "lang is not defined" unless defined $lang;
@@ -322,53 +337,59 @@ sub get_language {
 }
 
 sub psgi_output {
-    my($cfg, $html) = @_;
+    my ( $cfg, $html ) = @_;
 
     return unless defined $html;
 
     my $res = Plack::Response->new(200);
-    $res->cookies->{svnweb-lang} = $cfg->{lang};
+    $res->cookies->{ svnweb-lang } = $cfg->{lang};
 
     $res->content_type('text/html');
 
-    if(ref $html) {
+    if ( ref $html ) {
 
         #~ print $cfg->{cgi}->header(
-            #~ -charset => $html->{charset}  || 'UTF-8',
-            #~ -type    => $html->{mimetype} || 'text/html',
+        #~ -charset => $html->{charset}  || 'UTF-8',
+        #~ -type    => $html->{mimetype} || 'text/html',
         #~ -cookie  => \@cookies,
         #~ );
 
-    $cfg->{path} = encode_path($cfg->{path});
-        if($html->{template}) {
-            $template->process($html->{template}, {
-        c => $cfg,
-        %{ $html->{data} }
-        }) or die "Template::process() error: " . $template->error;
-        } else {
+        $cfg->{path} = encode_path( $cfg->{path} );
+        if ( $html->{template} ) {
+            $template->process(
+                $html->{template},
+                {
+                    c => $cfg,
+                    %{ $html->{data} }
+                }
+            ) or die "Template::process() error: " . $template->error;
+        }
+        else {
             $res->body( $html->{body} );
         }
-    } else {
+    }
+    else {
+
         #~ print $cfg->{cgi}->header(
-            #~ -charset => 'UTF-8',
-            #~ -type    => 'text/html',
+        #~ -charset => 'UTF-8',
+        #~ -type    => 'text/html',
         #~ -cookie  => \@cookies,
         #~ );
-        $res->body( $html );
+        $res->body($html);
     }
     return $res->finalize;
 }
 
 sub get_template {
-    Template->new({
-    INCLUDE_PATH => $config->{templatedirs},
-    COMPILE_DIR  => $config->{tt_compile_dir},
-    PRE_CHOMP    => 2,
-    POST_CHOMP   => 2,
-    FILTERS      => {
-        l       => ([\&loc_filter, 1]),
-    }
-    });
+    Template->new(
+        {
+            INCLUDE_PATH => $config->{templatedirs},
+            COMPILE_DIR  => $config->{tt_compile_dir},
+            PRE_CHOMP    => 2,
+            POST_CHOMP   => 2,
+            FILTERS      => { l => ( [ \&loc_filter, 1 ] ), }
+        }
+    );
 }
 
 sub run_psgi {
@@ -379,10 +400,10 @@ sub run_psgi {
 
     load_config('config.yaml');
 
-    $config->{$_}             = $opts{$_} foreach keys %opts;
-    $template               ||= get_template();
+    $config->{$_} = $opts{$_} foreach keys %opts;
+    $template ||= get_template();
 
-    my($html, $cfg);
+    my ( $html, $cfg );
 
     $cfg = {
         style     => $config->{style},
@@ -391,12 +412,12 @@ sub run_psgi {
         languages => $config->{languages},
     };
 
-        eval {
-        my($action, $base, $repo, $script, $path) = crack_url($req);
+    eval {
+        my ( $action, $base, $repo, $script, $path ) = crack_url($req);
 
-            SVN::Web::X->throw(
-                error => '(action %1 not supported)',
-                vars  => [$action]
+        SVN::Web::X->throw(
+            error => '(action %1 not supported)',
+            vars  => [$action]
         ) unless exists $config->{actions}{ lc($action) };
 
         $cfg->{repos}    = $repo;
@@ -407,27 +428,29 @@ sub run_psgi {
         $cfg->{self_uri} = $cgi->self_url();
         $cfg->{config}   = $config;
 
-            $html = run($cfg);
-        };
+        $html = run($cfg);
+    };
 
-        my $e;
-        if($e = SVN::Web::X->caught()) {
+    my $e;
+    if ( $e = SVN::Web::X->caught() ) {
+        $html->{template} = 'x';
+        $html->{data}{error_msg} =
+          SVN::Web::I18N::loc( $e->error(), @{ $e->vars() } );
+    }
+    else {
+        if ($@) {
             $html->{template} = 'x';
-            $html->{data}{error_msg} = SVN::Web::I18N::loc($e->error(), @{ $e->vars() });
-        } else {
-            if($@) {
-                $html->{template} = 'x';
-                $html->{data}{error_msg} = $@;
-            }
+            $html->{data}{error_msg} = $@;
         }
+    }
 
-        return psgi_output($cfg, $html);
+    return psgi_output( $cfg, $html );
 }
 
 sub loc_filter {
     my $context = shift;
     my @args    = @_;
-    return sub { SVN::Web::I18N::loc($_[0], @args) };
+    return sub { SVN::Web::I18N::loc( $_[0], @args ) };
 }
 
 # Crack a URL and determine the components we need.
@@ -436,108 +459,112 @@ sub crack_url {
     my $obj = shift;
 
     my $location = $obj->script_name;
-    (my $filename = $location) =~ s{/[^/]$}();
+    ( my $filename = $location ) =~ s{/[^/]$}();
     my $path_info = $req->path_info;
-    my $uri = $obj->request_uri;
-
+    my $uri       = $obj->request_uri;
 
     #~ if(ref($obj) eq 'Apache' or ref($obj) eq 'Apache2::RequestRec') {
-#~
+    #~
     #~ $location  = $obj->location();
     #~ $filename  = $obj->filename();
     #~ $path_info = $obj->path_info();
     #~ $uri       = $obj->uri();
-#~
+    #~
     #~ } else {
-#~
+    #~
     #~ # For compatibility with Apache::Request->filename():
     #~ # 1. $location is the current working directory
     #~ # 2. $filename is $location + the first component of path_info()
     #~ $location  = POSIX::getcwd();
-#~
+    #~
     #~ # Split path_info, keeping trailing fields
     #~ my @path = split('/', $obj->path_info(), -1);
     #~ $filename = $location;
     #~ if($#path) {
-        #~ shift @path;    # Leading empty null field
-        #~ if(defined $path[0]) {
-        #~ $filename .= '/' . shift @path;
-        #~ }
+    #~ shift @path;    # Leading empty null field
+    #~ if(defined $path[0]) {
+    #~ $filename .= '/' . shift @path;
     #~ }
-#~
+    #~ }
+    #~
     #~ $path_info = '/' . join('/', @path);
     #~ $uri       = $obj->url(-relative => 1, -path_info => 1);
-#~
+    #~
     #~ }
 
-#    warn "LOCATION: $location\n";
-#    warn "FILENAME: $filename\n";
-#    warn "PATH_INFO: $path_info\n";
-#    warn "URI: $uri\n";
+    #    warn "LOCATION: $location\n";
+    #    warn "FILENAME: $filename\n";
+    #    warn "PATH_INFO: $path_info\n";
+    #    warn "URI: $uri\n";
 
-    my($action, $base, $repo, $script, $path);
+    my ( $action, $base, $repo, $script, $path );
 
     # Determine $repo.
     #
     # This is used as the key in to the hash of configured repositories.
     # It may be the empty string, in which case the action to run is
     # the 'list repositories' action.
-    if($location eq $filename) {
-    $repo   = '';        # No repo, show repo list
-    $action = 'list';
-    } else {
-    # Start with $repo equal to $filename.  Then remove $location.
-    # This needs to be quoted for systems where the path may include
-    # backslashes.  There may also be a trailing directory separator
-    # which needs removing.
-    #
-    # XXX In an ideal world File::Spec would tell us what the directory
-    # separator is.  For the time being, punt, and use both forward and
-    # backward slashes.
-    $repo = $filename;
-    my $quoted_location = quotemeta($location);
-    $repo =~ s{^ $quoted_location [/\\]? }{}x;
-    $repo = uri_unescape($repo);
+    if ( $location eq $filename ) {
+        $repo   = '';       # No repo, show repo list
+        $action = 'list';
+    }
+    else {
+
+        # Start with $repo equal to $filename.  Then remove $location.
+        # This needs to be quoted for systems where the path may include
+        # backslashes.  There may also be a trailing directory separator
+        # which needs removing.
+        #
+        # XXX In an ideal world File::Spec would tell us what the directory
+        # separator is.  For the time being, punt, and use both forward and
+        # backward slashes.
+        $repo = $filename;
+        my $quoted_location = quotemeta($location);
+        $repo =~ s{^ $quoted_location [/\\]? }{}x;
+        $repo = uri_unescape($repo);
     }
 
-#    warn "REPO: $repo\n";
+    #    warn "REPO: $repo\n";
 
     # Determine $action
     #
     # This will be used as the key in to the hash of configured actions
     # and their classes.  If no action is included in the URL then the
     # default action is 'browse'.
-    if(! defined $action) {
-    if($path_info eq '/' or $path_info eq '') {
-        $action = 'browse';
-    } else {
-        my @path = split('/', $path_info);
-        $action = $path[1];
-    }
+    if ( !defined $action ) {
+        if ( $path_info eq '/' or $path_info eq '' ) {
+            $action = 'browse';
+        }
+        else {
+            my @path = split( '/', $path_info );
+            $action = $path[1];
+        }
     }
 
-#    warn "ACTION: $action\n";
+    #    warn "ACTION: $action\n";
 
     # Determine $path
     #
     # This is the path in the repository that we will be acting on.  Some
     # actions don't need this set.
-    if($action eq 'list') {
-    $path = '/';
-    } else {
-    if($path_info eq '' or $path_info eq '/') {
+    if ( $action eq 'list' ) {
         $path = '/';
-    } else {
-        $path = $path_info;
-        $path =~ s{^/$action}{};
-        $path =~ s{/+$}{} unless $path eq '/';
     }
+    else {
+        if ( $path_info eq '' or $path_info eq '/' ) {
+            $path = '/';
+        }
+        else {
+            $path = $path_info;
+            $path =~ s{^/$action}{};
+            $path =~ s{/+$}{} unless $path eq '/';
+        }
     }
 
     # Unescape it, as it will have been escaped on the web page
     $path = uri_unescape($path);
 
-#    warn "PATH: $path\n";
+    #    warn "PATH: $path\n";
 
     # Determine $script
     #
@@ -547,9 +574,9 @@ sub crack_url {
     # like '/svnweb', or possibly '/'.
 
     $script = $obj->script_name;
-    $script =~ s{/$}{};        # Remove trailing slash
+    $script =~ s{/$}{};    # Remove trailing slash
 
-#    warn "SCRIPT: $script\n";
+    #    warn "SCRIPT: $script\n";
 
     # Determine $base
     #
@@ -559,31 +586,31 @@ sub crack_url {
 
     # In all cases, $base is a substring of $script.  In the mod_perl and
     # svnweb-server cases it's identical
-    $base = $script;        # Only in mod_perl case
+    $base = $script;       # Only in mod_perl case
 
-    # If we're running as a CGI then SCRIPT_FILENAME will (or should)
-    # be set in the environment.  If it is, find the filename component,
-    # which should be the name of this script, and remove that component
-    # from $base.
-    #
-    # This turns '/svnweb/index.cgi' into '/svnweb/'.  We go through these
-    # shenanigans so that the script can be called something other than
-    # index.cgi.
-    #~ if(ref($obj) ne 'Apache') {
-    #~ if(exists $ENV{SCRIPT_FILENAME}) {
-        #~ my $path = $ENV{SCRIPT_FILENAME};
-        #~ my(undef, undef, $file) = File::Spec->splitpath($path);
-        #~ $base =~ s{$file$}{};
-    #~ } else {
+# If we're running as a CGI then SCRIPT_FILENAME will (or should)
+# be set in the environment.  If it is, find the filename component,
+# which should be the name of this script, and remove that component
+# from $base.
+#
+# This turns '/svnweb/index.cgi' into '/svnweb/'.  We go through these
+# shenanigans so that the script can be called something other than
+# index.cgi.
+#~ if(ref($obj) ne 'Apache') {
+#~ if(exists $ENV{SCRIPT_FILENAME}) {
+#~ my $path = $ENV{SCRIPT_FILENAME};
+#~ my(undef, undef, $file) = File::Spec->splitpath($path);
+#~ $base =~ s{$file$}{};
+#~ } else {
 #~ #        warn 'SCRIPT_FILENAME not set in environment, assuming script is called index.cgi';
-        #~ $base =~ s{index.cgi$}{};
-    #~ }
-    #~ }
-    $base =~ s{/$}{};        # Remove trailing slash
+#~ $base =~ s{index.cgi$}{};
+#~ }
+#~ }
+    $base =~ s{/$}{};    # Remove trailing slash
 
-#    warn "BASE: $base\n";
+    #    warn "BASE: $base\n";
 
-    return($action, $base, $repo, $script, $path);
+    return ( $action, $base, $repo, $script, $path );
 }
 
 sub encode_path {
@@ -591,9 +618,9 @@ sub encode_path {
 
     return unless defined $path;
 
-    my @path = split('/', $path);
+    my @path = split( '/', $path );
 
-    $path = join('/', map { uri_escape($_) } @path);
+    $path = join( '/', map { uri_escape($_) } @path );
 
     return $path;
 }

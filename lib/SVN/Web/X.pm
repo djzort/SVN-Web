@@ -2,7 +2,7 @@ package SVN::Web::X;
 
 our $VERSION = 0.53;
 
-use Exception::Class('SVN::Web::X' => { fields => ['vars'], },);
+use Exception::Class( 'SVN::Web::X' => { fields => ['vars'], }, );
 
 1;
 

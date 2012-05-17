@@ -238,14 +238,14 @@ sub recent_interesting_rev {
     my $path = shift;
     my $rev  = shift;
 
-    my $ra  = $self->{repos}{ra};
+    my $ra = $self->{repos}{ra};
 
     my @log_result;
-    $ra->get_log([$self->rpath($path)], $rev, 1, 1, 0, 1,
-                 sub { @log_result = @_; });
+    $ra->get_log( [ $self->rpath($path) ],
+        $rev, 1, 1, 0, 1, sub { @log_result = @_; } );
 
     return @log_result if wantarray();
-    return $log_result[1];	# Revision number
+    return $log_result[1];    # Revision number
 }
 
 =head2 get_revs()
@@ -284,18 +284,21 @@ sub get_revs {
 
     my $exp_rev = $self->{cgi}->param('rev');
     my $yng_rev = $self->{repos}{ra}->get_latest_revnum();
-    my $act_rev = defined $exp_rev ? $self->recent_interesting_rev($path, $exp_rev) :
-                                     $self->recent_interesting_rev($path, $yng_rev);
+    my $act_rev =
+      defined $exp_rev
+      ? $self->recent_interesting_rev( $path, $exp_rev )
+      : $self->recent_interesting_rev( $path, $yng_rev );
 
     my $at_head = 0;
-    if(! defined $exp_rev) {
-	$at_head = 1;
-    } else {
-	if($exp_rev == $yng_rev) {
-	    $at_head = 1;
-	}
+    if ( !defined $exp_rev ) {
+        $at_head = 1;
     }
-    return($exp_rev, $yng_rev, $act_rev, $at_head);
+    else {
+        if ( $exp_rev == $yng_rev ) {
+            $at_head = 1;
+        }
+    }
+    return ( $exp_rev, $yng_rev, $act_rev, $at_head );
 }
 
 =head2 format_svn_timestamp()
@@ -306,7 +309,7 @@ C<timezone> configuration directives.
 
 =cut
 
-my $tz_offset = undef;		# Cache the timezone offset
+my $tz_offset = undef;    # Cache the timezone offset
 
 sub format_svn_timestamp {
     my $self    = shift;
@@ -314,22 +317,24 @@ sub format_svn_timestamp {
 
     # Note: Buggy on Solaris
     # my $time = SVN::Core::time_from_cstring($cstring) / 1_000_000;
-    my(@time) = $cstring =~ /^(....)-(..)-(..)T(..):(..):(..)/;
+    my (@time) = $cstring =~ /^(....)-(..)-(..)T(..):(..):(..)/;
 
-    my $time = timegm_nocheck($time[5], $time[4],     $time[3],
-                              $time[2], $time[1] - 1, $time[0]);
+    my $time =
+      timegm_nocheck( $time[5], $time[4], $time[3], $time[2], $time[1] - 1,
+        $time[0] );
 
-    if($self->{config}->{timezone} eq 'local') {
-	return POSIX::strftime($self->{config}->{timedate_format},
-			       localtime($time));
+    if ( $self->{config}->{timezone} eq 'local' ) {
+        return POSIX::strftime( $self->{config}->{timedate_format},
+            localtime($time) );
     }
 
-    if((not defined $tz_offset) and ($self->{config}->{timezone} ne '')) {
-	$tz_offset = Time::Zone::tz_offset($self->{config}->{timezone});
-	$time += $tz_offset;
+    if ( ( not defined $tz_offset ) and ( $self->{config}->{timezone} ne '' ) )
+    {
+        $tz_offset = Time::Zone::tz_offset( $self->{config}->{timezone} );
+        $time += $tz_offset;
     }
 
-    return POSIX::strftime($self->{config}->{timedate_format}, gmtime($time));
+    return POSIX::strftime( $self->{config}->{timedate_format}, gmtime($time) );
 }
 
 =head1 CACHING
@@ -373,7 +378,7 @@ See L<http://www.perl.com/perl/misc/Artistic.html>
 =cut
 
 sub rpath {
-    my ($self,$p) = @_;
+    my ( $self, $p ) = @_;
     my $path = $p || $self->{path};
     $path =~ s{^/}{} if $path;
     return $path;
