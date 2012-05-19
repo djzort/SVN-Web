@@ -342,7 +342,7 @@ sub psgi_output {
     return unless defined $html;
 
     my $res = Plack::Response->new(200);
-    $res->cookies->{ svnweb-lang } = $cfg->{lang};
+    $res->cookies->{ 'svnweb-lang' } = $cfg->{lang};
 
     $res->content_type('text/html');
 
@@ -425,7 +425,7 @@ sub run_psgi {
         $cfg->{path}     = $path;
         $cfg->{script}   = $script;
         $cfg->{base_uri} = $base;
-        $cfg->{self_uri} = $cgi->self_url();
+        $cfg->{self_uri} = $req->self_url();
         $cfg->{config}   = $config;
 
         $html = run($cfg);
@@ -460,7 +460,7 @@ sub crack_url {
 
     my $location = $obj->script_name;
     ( my $filename = $location ) =~ s{/[^/]$}();
-    my $path_info = $req->path_info;
+    my $path_info = $obj->path_info;
     my $uri       = $obj->request_uri;
 
     #~ if(ref($obj) eq 'Apache' or ref($obj) eq 'Apache2::RequestRec') {
