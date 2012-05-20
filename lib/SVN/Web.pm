@@ -400,7 +400,6 @@ sub run_psgi {
 
     load_config('config.yaml');
 
-    $config->{$_} = $opts{$_} foreach keys %opts;
     $template ||= get_template();
 
     my ( $html, $cfg );
