@@ -394,9 +394,7 @@ sub get_template {
 
 sub run_psgi {
 
-    my $env = shift;
-
-    my $req = Plack::Request->new($env);
+    my $req = shift;
 
     load_config('config.yaml');
 
@@ -407,7 +405,6 @@ sub run_psgi {
     $cfg = {
         style     => $config->{style},
         cgi       => $req,
-        env       => $env,
         languages => $config->{languages},
     };
 

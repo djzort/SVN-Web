@@ -19,6 +19,8 @@ BEGIN {
     }
 }
 
+my $version = SVN::Web->VERSION();
+
 die "already have config.yaml" if -e 'config.yaml';
 
 open my $fh, ">config.yaml";
@@ -54,7 +56,7 @@ while(my($from, $to) = each %targets) {
 }
 
 print $fh <<END;
-version: 0.53
+version: $version
 
 # Actions, the classes that implement them, and where they should appear
 # in the action menu
@@ -145,20 +147,6 @@ timedate_format: '%Y/%m/%d %H:%M:%S'
 END
 
 close $fh;
-
-open $fh, '>index.cgi';
-print $fh <<"END";
-$Config::Config{startperl} -w
-#use lib '.';
-#use lib '../lib';
-use CGI::Carp qw(fatalsToBrowser);
-use SVN::Web;
-SVN::Web::run_cgi();
-END
-
-close $fh;
-
-chmod 0755, 'index.cgi';
 
 # XXX: export the template too
 
