@@ -10,7 +10,6 @@ use SVN::Ra;
 use YAML ();
 use Template;
 use File::Spec;
-use POSIX ();
 use Plack::Request;
 
 use SVN::Web::X;
@@ -142,6 +141,8 @@ sub get_repos {
 
     # If there's a leading '/' then tack 'file://' on to the start
     $repo_uri = "file://$repo_uri" if $repo_uri =~ m{^/};
+
+    warn "REPO_URI: $repo_uri\n";
 
     eval {
         $REPOS{$repos}{uri} ||= $repo_uri;
@@ -415,7 +416,6 @@ sub run_psgi {
         $cfg->{path}     = $path;
         $cfg->{script}   = $script;
         $cfg->{base_uri} = $base;
-        #$cfg->{self_uri} = $req->self_url();
         $cfg->{self_uri} = $req->path();
         $cfg->{config}   = $config;
 
@@ -449,44 +449,10 @@ sub crack_url {
 
     my $obj = shift;
 
-    my $location = $obj->script_name;
-    ( my $filename = $location ) =~ s{/[^/]$}();
-    my $path_info = $obj->path_info;
+    my $path_info = $obj->path;
     my $uri       = $obj->request_uri;
 
-    #~ if(ref($obj) eq 'Apache' or ref($obj) eq 'Apache2::RequestRec') {
-    #~
-    #~ $location  = $obj->location();
-    #~ $filename  = $obj->filename();
-    #~ $path_info = $obj->path_info();
-    #~ $uri       = $obj->uri();
-    #~
-    #~ } else {
-    #~
-    #~ # For compatibility with Apache::Request->filename():
-    #~ # 1. $location is the current working directory
-    #~ # 2. $filename is $location + the first component of path_info()
-    #~ $location  = POSIX::getcwd();
-    #~
-    #~ # Split path_info, keeping trailing fields
-    #~ my @path = split('/', $obj->path_info(), -1);
-    #~ $filename = $location;
-    #~ if($#path) {
-    #~ shift @path;    # Leading empty null field
-    #~ if(defined $path[0]) {
-    #~ $filename .= '/' . shift @path;
-    #~ }
-    #~ }
-    #~
-    #~ $path_info = '/' . join('/', @path);
-    #~ $uri       = $obj->url(-relative => 1, -path_info => 1);
-    #~
-    #~ }
-
-    #    warn "LOCATION: $location\n";
-    #    warn "FILENAME: $filename\n";
-    #    warn "PATH_INFO: $path_info\n";
-    #    warn "URI: $uri\n";
+    warn "PATH_INFO: $path_info\n";
 
     my ( $action, $base, $repo, $script, $path );
 
@@ -495,7 +461,7 @@ sub crack_url {
     # This is used as the key in to the hash of configured repositories.
     # It may be the empty string, in which case the action to run is
     # the 'list repositories' action.
-    if ( $location eq $filename ) {
+    if ( $path_info eq '/' ) {
         $repo   = '';       # No repo, show repo list
         $action = 'list';
     }
@@ -509,13 +475,11 @@ sub crack_url {
         # XXX In an ideal world File::Spec would tell us what the directory
         # separator is.  For the time being, punt, and use both forward and
         # backward slashes.
-        $repo = $filename;
-        my $quoted_location = quotemeta($location);
-        $repo =~ s{^ $quoted_location [/\\]? }{}x;
+        ($repo) = $path_info =~ m{^/([^/]+)/?};
         $repo = uri_unescape($repo);
     }
 
-    #    warn "REPO: $repo\n";
+        warn "REPO: $repo\n";
 
     # Determine $action
     #
@@ -523,16 +487,11 @@ sub crack_url {
     # and their classes.  If no action is included in the URL then the
     # default action is 'browse'.
     unless ( defined $action ) {
-        if ( $path_info eq '/' or $path_info eq '' ) {
-            $action = 'browse';
-        }
-        else {
             my @path = split( '/', $path_info );
-            $action = $path[1];
-        }
+            $action = $path[2] || 'browse';
     }
 
-    #    warn "ACTION: $action\n";
+        warn "ACTION: $action\n";
 
     # Determine $path
     #
@@ -542,7 +501,7 @@ sub crack_url {
         $path = '/';
     }
     else {
-        if ( $path_info eq '' or $path_info eq '/' ) {
+        if ( $path_info eq '/' ) {
             $path = '/';
         }
         else {
@@ -555,7 +514,7 @@ sub crack_url {
     # Unescape it, as it will have been escaped on the web page
     $path = uri_unescape($path);
 
-    #    warn "PATH: $path\n";
+        warn "PATH: $path\n";
 
     # Determine $script
     #
@@ -565,9 +524,9 @@ sub crack_url {
     # like '/svnweb', or possibly '/'.
 
     $script = $obj->script_name;
-    $script =~ s{/$}{};    # Remove trailing slash
+#    $script =~ s{/$}{};    # Remove trailing slash
 
-    #    warn "SCRIPT: $script\n";
+        warn "SCRIPT: $script\n";
 
     # Determine $base
     #
@@ -577,7 +536,8 @@ sub crack_url {
 
     # In all cases, $base is a substring of $script.  In the mod_perl and
     # svnweb-server cases it's identical
-    $base = $script;       # Only in mod_perl case
+    # $base = $script;       # Only in mod_perl case
+    $base = $obj->base;       # Only in mod_perl case
 
 # If we're running as a CGI then SCRIPT_FILENAME will (or should)
 # be set in the environment.  If it is, find the filename component,
@@ -599,7 +559,7 @@ sub crack_url {
 #~ }
     $base =~ s{/$}{};    # Remove trailing slash
 
-    #    warn "BASE: $base\n";
+        warn "BASE: $base\n";
 
     return ( $action, $base, $repo, $script, $path );
 }

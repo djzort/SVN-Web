@@ -181,7 +181,7 @@ sub run {
 
     while ( ( $name, $dirent ) = each %{$dirents} ) {
         my $kind = $dirent->kind();
-        my $entry_path =
+        my $entry_path = 
           $path eq '/'
           ? "$path$name"
           : "$path/$name";

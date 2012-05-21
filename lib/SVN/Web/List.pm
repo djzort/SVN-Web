@@ -119,11 +119,6 @@ sub repos_list {
         }
     }
     else {
-        SVN::Web::X->throw(
-            error => '(no repos)',
-            vars  => [  ]
-          )
-        unless ref $config->{repos} eq 'HASH';
 
         %repos = %{ $config->{repos} };
     }
