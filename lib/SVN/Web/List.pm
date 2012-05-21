@@ -107,7 +107,7 @@ sub repos_list {
             vars  => [ $config->{reposparent}, $! ]
           );
 
-        foreach my $dir (
+        for my $dir (
             grep {
                 -d File::Spec->catdir( $config->{reposparent}, $_ )
                   && !/^\./

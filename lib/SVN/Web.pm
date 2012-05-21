@@ -325,7 +325,7 @@ sub get_language {
     # If $lang is not defined, or if it's not in the hash of valid languages
     # then use the default configured language, falling back to English as
     # a last resort.
-    unless ( defined $lang or !exists $languages->{$lang} ) {
+    if ( !defined $lang or !exists $languages->{$lang} ) {
         $lang = $default_lang;
         $lang = 'en' unless defined $lang;
     }
@@ -415,7 +415,8 @@ sub run_psgi {
         $cfg->{path}     = $path;
         $cfg->{script}   = $script;
         $cfg->{base_uri} = $base;
-        $cfg->{self_uri} = $req->self_url();
+        #$cfg->{self_uri} = $req->self_url();
+        $cfg->{self_uri} = $req->path();
         $cfg->{config}   = $config;
 
         $html = run($cfg);
