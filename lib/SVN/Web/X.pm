@@ -117,6 +117,8 @@ Copyright 2003-2004 by Chia-liang Kao C<< <clkao@clkao.org> >>.
 
 Copyright 2005-2007 by Nik Clayton C<< <nik@FreeBSD.org> >>.
 
+Copyright 2012 by Dean Hamstead C<< <dean@fragfest.com.au> >>.
+
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

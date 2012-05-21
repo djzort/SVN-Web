@@ -72,7 +72,7 @@ sub canonicalise_config {
     # Handle tt_compile_dir.  If it doesn't exist then set it to undef.
     # If it does exist, and is defined, append a '.' and the current
     # real UID, to help ensure uniqueness.
-    if ( !exists $config->{tt_compile_dir} ) {
+    unless ( exists $config->{tt_compile_dir} ) {
         $config->{tt_compile_dir} = undef;    # undef == no compiling
     }
     else {
@@ -82,7 +82,7 @@ sub canonicalise_config {
     }
 
     # Handle timedate_format
-    if ( !exists $config->{timedate_format} ) {
+    unless ( exists $config->{timedate_format} ) {
         $config->{timedate_format} = '%Y/%m/%d %H:%M:%S';
     }
 
@@ -98,7 +98,7 @@ sub canonicalise_config {
 
     # Add any additional language directories
     if ( defined $config->{language_dirs} ) {
-        foreach my $dir ( @{ $config->{language_dirs} } ) {
+        for my $dir ( @{ $config->{language_dirs} } ) {
             SVN::Web::I18N::add_directory($dir);
         }
     }
@@ -161,7 +161,7 @@ sub get_repos {
     }
 
     if ( $config->{block} ) {
-        foreach my $blocked ( @{ $config->{block} } ) {
+        for my $blocked ( @{ $config->{block} } ) {
             delete $REPOS{$blocked};
         }
     }
@@ -273,7 +273,7 @@ sub run {
     $html = $cache->get($cache_key) if defined $cache_key;
 
     # No data?  Get the action to generate it, then cache it
-    if ( !defined $html ) {
+    unless ( defined $html ) {
 
         # Create a default pool for the action's allocation
         my $pool = SVN::Pool->new_default();
@@ -319,14 +319,14 @@ sub get_language {
 
     # If no valid lang=.. param was found then check the user's cookies
 
-    if ( !defined $lang ) {
+    unless ( defined $lang ) {
         $lang = $obj->cookies->{'svnweb-lang'};
     }
 
     # If $lang is not defined, or if it's not in the hash of valid languages
     # then use the default configured language, falling back to English as
     # a last resort.
-    if ( !defined $lang or !exists $languages->{$lang} ) {
+    unless ( defined $lang or !exists $languages->{$lang} ) {
         $lang = $default_lang;
         $lang = 'en' unless defined $lang;
     }
@@ -527,7 +527,7 @@ sub crack_url {
     # This will be used as the key in to the hash of configured actions
     # and their classes.  If no action is included in the URL then the
     # default action is 'browse'.
-    if ( !defined $action ) {
+    unless ( defined $action ) {
         if ( $path_info eq '/' or $path_info eq '' ) {
             $action = 'browse';
         }
