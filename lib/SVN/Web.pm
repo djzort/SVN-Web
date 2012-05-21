@@ -12,7 +12,6 @@ use Template;
 use File::Spec;
 use POSIX ();
 use Plack::Request;
-use Plack::Response;
 
 use SVN::Web::X;
 use FindBin;
@@ -337,32 +336,28 @@ sub get_language {
 }
 
 sub psgi_output {
-    my ( $cfg, $html ) = @_;
+    my ( $req, $cfg, $html ) = @_;
 
     return unless defined $html;
 
-    my $res = Plack::Response->new(200);
+    my $res = $req->new_response(200);
     $res->cookies->{ 'svnweb-lang' } = $cfg->{lang};
 
     $res->content_type('text/html');
 
     if ( ref $html ) {
 
-        #~ print $cfg->{cgi}->header(
-        #~ -charset => $html->{charset}  || 'UTF-8',
-        #~ -type    => $html->{mimetype} || 'text/html',
-        #~ -cookie  => \@cookies,
-        #~ );
-
         $cfg->{path} = encode_path( $cfg->{path} );
         if ( $html->{template} ) {
+            my $body;
             $template->process(
                 $html->{template},
                 {
                     c => $cfg,
                     %{ $html->{data} }
-                }
+                }, \$body
             ) or die "Template::process() error: " . $template->error;
+            $res->body( $body );
         }
         else {
             $res->body( $html->{body} );
@@ -370,14 +365,11 @@ sub psgi_output {
     }
     else {
 
-        #~ print $cfg->{cgi}->header(
-        #~ -charset => 'UTF-8',
-        #~ -type    => 'text/html',
-        #~ -cookie  => \@cookies,
-        #~ );
         $res->body($html);
     }
-    return $res->finalize;
+
+    return $res->finalize
+
 }
 
 sub get_template {
@@ -394,7 +386,9 @@ sub get_template {
 
 sub run_psgi {
 
-    my $req = shift;
+    my $c = shift;
+    my $env = shift;
+    my $req = Plack::Request->new($env);
 
     load_config('config.yaml');
 
@@ -440,7 +434,7 @@ sub run_psgi {
         }
     }
 
-    return psgi_output( $cfg, $html );
+    return psgi_output( $req, $cfg, $html );
 }
 
 sub loc_filter {
