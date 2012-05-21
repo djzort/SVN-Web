@@ -119,7 +119,12 @@ sub repos_list {
         }
     }
     else {
-        die 'No repositories defined?' unless ref $config->{repos} eq 'HASH';
+        SVN::Web::X->throw(
+            error => '(no repos)',
+            vars  => [  ]
+          )
+        unless ref $config->{repos} eq 'HASH';
+
         %repos = %{ $config->{repos} };
     }
 
