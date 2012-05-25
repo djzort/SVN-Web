@@ -242,9 +242,9 @@ sub recent_interesting_rev {
 
     my @log_result;
 
-    warn "RPATH( $path )";
-    warn "REV $rev";
-    warn "BASE PATH IS " . $ra->get_repos_root;
+    # warn "RPATH( $path )";
+    # warn "REV $rev";
+    # warn "BASE PATH IS " . $ra->get_repos_root;
 
     $ra->get_log( [ $self->rpath($path) ],
         $rev, 1, 1, 0, 1, sub { @log_result = @_; } );
@@ -386,7 +386,7 @@ See L<http://www.perl.com/perl/misc/Artistic.html>
 
 sub rpath {
     my ( $self, $p ) = @_;
-    # my $path = $p || $self->{path};
+    my $path = $p || $self->{path};
     my $path = $p;
     $path =~ s{^/}{} if $path;
     return $path

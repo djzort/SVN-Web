@@ -142,7 +142,7 @@ sub get_repos {
     # If there's a leading '/' then tack 'file://' on to the start
     $repo_uri = "file://$repo_uri" if $repo_uri =~ m{^/};
 
-    warn "REPO_URI: $repo_uri\n";
+    # warn "REPO_URI: $repo_uri";
 
     eval {
         $REPOS{$repos}{uri} ||= $repo_uri;
@@ -437,7 +437,7 @@ sub crack_url {
     my $path_info = $obj->path;
     my $uri       = $obj->request_uri;
 
-    warn "PATH_INFO: $path_info\n";
+    # warn "PATH_INFO: $path_info";
 
     my ( $action, $base, $repo, $script, $path );
 
@@ -464,7 +464,7 @@ sub crack_url {
         $repo = uri_unescape($repo);
     }
 
-        warn "REPO: $repo\n";
+    #    warn "REPO: $repo";
 
     # Determine $action
     #
@@ -473,11 +473,11 @@ sub crack_url {
     # default action is 'browse'.
     unless ( defined $action ) {
             my @path = split( '/', $path_info );
-            warn "SPLIT PATH: ", join('|', @path);
+            # warn "SPLIT PATH: ", join('|', @path);
             $action = $path[2] || 'browse';
     }
 
-        warn "ACTION: $action\n";
+    #    warn "ACTION: $action";
 
     # Determine $path
     #
@@ -500,7 +500,7 @@ sub crack_url {
     # Unescape it, as it will have been escaped on the web page
     $path = uri_unescape($path);
 
-        warn "PATH: $path\n";
+    #    warn "PATH: $path";
 
     # Determine $script
     #
@@ -510,9 +510,8 @@ sub crack_url {
     # like '/svnweb', or possibly '/'.
 
     $script = $obj->script_name;
-#    $script =~ s{/$}{};    # Remove trailing slash
 
-        warn "SCRIPT: $script\n";
+    #    warn "SCRIPT: $script";
 
     # Determine $base
     #
@@ -527,7 +526,7 @@ sub crack_url {
 
     $base =~ s{/$}{};    # Remove trailing slash
 
-        warn "BASE: $base\n";
+    #    warn "BASE: $base";
 
     return ( $action, $base, $repo, $script, $path );
 }

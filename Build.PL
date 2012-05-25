@@ -33,11 +33,11 @@ my $class = Module::Build->subclass(code => <<'EOCODE');
 	warn "Copying additional files\n";
 
 	open(MAN, 'MANIFEST') or die 'Could not open MANIFEST';
-	my @files = map { chomp; $_ } 
+	my @files = map { chomp; $_ }
           grep { $_ =~ m{^lib/SVN/Web/(Style|Template|I18N)} } <MAN>;
         close(MAN);
 
-        $self->copy_if_modified(from => $_, 
+        $self->copy_if_modified(from => $_,
                                 to   => File::Spec->catfile($self->blib(), $_))
           for map { $self->localize_file_path($_) } @files;
 
@@ -356,7 +356,7 @@ EOM
 
 You have entered a port number that is less than a 1024, and you are
 not the root user.  Please enter a different port number.
-
+:
 EOM
 
 	    next;
