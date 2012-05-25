@@ -32,7 +32,7 @@ my %targets = (
 
 while(my($from, $to) = each %targets) {
     my $path = $INC{'SVN/Web.pm'};
-    $path =~ s{.pm$}{/$from}i or next;
+    $path =~ s{\.pm$}{/$from}i or next;
 
     find(
         {
