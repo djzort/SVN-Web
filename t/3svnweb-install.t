@@ -19,7 +19,7 @@ chdir($tmpdir);
 
 system "$^X -I$cwd/blib/lib $cwd/bin/svnweb-install > /dev/null";
 
-foreach my $file (qw(config.yaml index.cgi)) {
+for my $file (qw(config.yaml)) {
     ok(-f "$tmpdir/$file", "$tmpdir/$file created");
 }
 

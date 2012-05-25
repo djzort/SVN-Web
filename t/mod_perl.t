@@ -12,6 +12,8 @@ use Template;
 use SVN::Web::Test ();
 use SVN::Web::ConfigData;
 
+__END__
+
 plan skip_all => q{mod_perl tests, disabled by installer}
     unless SVN::Web::ConfigData->feature('run_mod_perl_tests');
 

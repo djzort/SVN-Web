@@ -11,6 +11,8 @@ use Template;
 use SVN::Web::Test;
 use SVN::Web::ConfigData;
 
+__END__
+
 plan skip_all => q{svnweb-server tests, disabled by installer}
     unless SVN::Web::ConfigData->feature('run_svnweb-server_tests');
 

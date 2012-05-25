@@ -18,7 +18,11 @@ you may need to make when updating an SVN::Web installation.
 
 =item
 
-Pulled out mod_perl1/2 and cgi, replaced with Plack
+Pulled out mod_perl1/2 and cgi, replaced with Plack. This probably broke lots of things.
+
+=item 
+
+Merged patch from rt26159
 
 =back
 

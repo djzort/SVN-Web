@@ -299,23 +299,10 @@ sub get_language {
 
     my $lang = $obj->param('lang');
 
-    #~ # If lang was included in the query string then delete it now we've
-    #~ # got it.  This stops it showing up in from calls to self_url().  Have
-    #~ # to do this in three different ways, depending on whether this is an
-    #~ # Apache::Request, Apache2::Request, or a CGI object.
-    #~ if(defined $lang) {
-    #~ if(ref($obj) eq 'Apache::Request') {
-    #~ my $table = $obj->parms();
-    #~ delete $table->{lang};
-    #~ } elsif(ref($obj) eq 'Apache2::Request') {
-    #~ # Get the query string, remove lang param, replace queue string
-    #~ my $args = $obj->args();
-    #~ $args =~ s/lang = $lang (?:&|;)?//xms;
-    #~ $obj->args($args);
-    #~ } else {
-    #~ $obj->delete('lang'); # Remove from self_url() invocations
-    #~ }
-    #~ }
+    # If lang was included in the query string then delete it now we've
+    # got it.  This stops it showing up in from calls to self_url().
+
+    ## FIXME for Plack
 
     # If no valid lang=.. param was found then check the user's cookies
 
@@ -538,24 +525,6 @@ sub crack_url {
     # $base = $script;       # Only in mod_perl case
     $base = $obj->base;       # Only in mod_perl case
 
-# If we're running as a CGI then SCRIPT_FILENAME will (or should)
-# be set in the environment.  If it is, find the filename component,
-# which should be the name of this script, and remove that component
-# from $base.
-#
-# This turns '/svnweb/index.cgi' into '/svnweb/'.  We go through these
-# shenanigans so that the script can be called something other than
-# index.cgi.
-#~ if(ref($obj) ne 'Apache') {
-#~ if(exists $ENV{SCRIPT_FILENAME}) {
-#~ my $path = $ENV{SCRIPT_FILENAME};
-#~ my(undef, undef, $file) = File::Spec->splitpath($path);
-#~ $base =~ s{$file$}{};
-#~ } else {
-#~ #        warn 'SCRIPT_FILENAME not set in environment, assuming script is called index.cgi';
-#~ $base =~ s{index.cgi$}{};
-#~ }
-#~ }
     $base =~ s{/$}{};    # Remove trailing slash
 
         warn "BASE: $base\n";
@@ -622,24 +591,18 @@ repository.
 =item 4.
 
 Either configure your web server (see L</"WEB SERVERS">) to use SVN::Web,
-or run C<svnweb-server> to start a simple web server for testing.
+or run with C<plackup> to start a simple web server for testing.
 
-  svnweb-server
-
-Note: C<svnweb-server> requires HTTP::Server::Simple to run, which is not
-a requirement of SVN::Web.  You may have to install HTTP::Server::Simple
-first.
+  plackup -Ilib/ ./SVN-Web.psgi
 
 =item 5.
 
 Point your web browser at the correct URL to browse your repository.
-If you've run C<svnweb-server> then this is L<http://localhost:8080/>.
+If you've run C<plackup> then this is L<http://localhost:5000/>.
 
 =back
 
-See
-L<http://jc.ngo.org.uk/svnweb/jc/browse/nik/CPAN/SVN-Web/trunk/>
-for the SVN::Web source code, browsed using SVN::Web.
+See L<https://github.com/djzort/SVN-Web> for the SVN::Web source code.
 
 =head1 DESCRIPTION
 
@@ -1309,113 +1272,48 @@ This section explains how to configure some common webservers to run
 SVN::Web.  In all cases, C</path/to/svnweb> in the examples is the
 directory you ran C<svnweb-install> in, and contains F<config.yaml>.
 
+SVN::Web now uses L<Plack> to provide connectivity to the web server.
+Previously a cgi, stand alone, fastcgi, mod_perl1 and a mod_perl2
+interface was provided as part of this software. All of which have been
+removed and replaced by Plack. In doing so, Plack now will connect
+SVN::Web to all of the above, plus PSGI, nginx_perl and anything else
+cooked up in the future.
+
 If you've configured a web server that isn't listed here for SVN::Web,
 please send in the instructions so they can be included in a future
 release.
 
-=head2 svnweb-server
+=head2 plackup
 
-C<svnweb-server> is a simple web server that runs SVN::Web, and is
-included and installed by this module.  It may be all you need to
+C<plackups> is a simple web server that can run SVN::Web stand alone,
+and is included and installed by Plack.  It may be all you need to
 productively use SVN::Web without needing to install a larger server.
 To use it, run:
 
-  svnweb-server --root /path/to/svnweb
+  plackup SVN-Web.psgi
 
-See C<perldoc svnweb-server> for details about additional options you can
+See C<perldoc plackup> for details about additional options you can
 use.
 
-=head2 Apache as CGI
+=head2 Apache as CGI (not recommended)
 
-Apache must be configured to support CGI scripts in the directory in which
-you ran C<svnweb-install>
-
-  <Directory /path/to/svnweb>
-    Options All ExecCGI
-  </Directory>
-
-If F</path/to/svnweb> is not under your normal Apache web hosting root then
-you will need to alias a URL to that path too.
-
-  Alias /svnweb /path/to/svnweb
-
-With that configuration the full path to browse the repository would be:
-
-  http://server/svnweb/index.cgi
+See L<Plack::Handler::CGI>
 
 =head2 Apache with mod_perl or mod_perl2
 
-You can use mod_perl or mod_perl2 with SVN::Web.  You must install
-L<Apache::Request|Apache::Request> (for mod_perl) or
-L<Apache2::Request|Apache2::Request> (for mod_perl2) to enable this support.
-
-The following Apache configuration is suitable.
-
-    <Directory /path/to/svnweb>
-      AllowOverride None
-      Options None
-      SetHandler perl-script
-      PerlHandler SVN::Web
-    </Directory>
-
-    <Directory /path/to/svnweb/css>
-      SetHandler default-handler
-    </Directory>
-
-If F</path/to/svnweb> is not under your normal Apache web hosting root then
-you will need to alias a URL to that path too.
-
-  Alias /svnweb /path/to/svnweb/
-
-With that configuration the full path to browse the repository would be:
-
-  http://server/svnweb
+See L<Plack::Handler::Apache1> or L<Plack::Handler::Apache2> respectively.
 
 =head2 Apache with FastCGI
 
-SVN::Web works with Apache and FastCGI.  The following Apache configuration
-is suitable.
-
-  FastCgiServer /path/to/svnweb/index.cgi
-  ScriptAlias /svnweb /path/to/svnweb/index.cgi
-
-  Alias /svnweb/css /path/to/svnweb/css
-  <Directory /path/to/svnweb/css>
-     SetHandler default-handler
-  </Directory>
+See L<Plack::Handler::FCGI>
 
 =head2 IIS
 
-SVN::Web works as a CGI script with IIS and Subversion on Windows servers.
-
-After following the instructions in L</SYNOPSIS>, ensure that IIS makes
-the new F<svnweb> directory available either as a directory or a
-virtual host.
-
-Using IIS Manager:
-
-=over
-
-=item
-
-Allow executable access to this directory (see I<Execute Permissions> in
-the I<Home Directory> tab under I<Properties>).
-
-=item
-
-Add F<index.cgi> to the list of default content pages under I<Documents>.
-
-=back
-
-=head1 MAILING LIST
-
-There is a mailing list for SVN::Web users and developers.  The address
-is svnweb@ngo.org.uk.  To subscribe please visit
-L<http://jc.ngo.org.uk/mailman/listinfo/svnweb>.
+For now this is probably broken.
 
 =head1 SEE ALSO
 
-L<SVN::Web::action>, svnweb-install(1), svnweb-server(1)
+L<SVN::Web::action>, svnweb-install(1), plackup(1), L<Plack>
 
 =head1 BUGS
 

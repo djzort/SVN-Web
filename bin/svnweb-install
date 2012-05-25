@@ -23,7 +23,7 @@ my $version = SVN::Web->VERSION();
 
 die "already have config.yaml" if -e 'config.yaml';
 
-open my $fh, ">config.yaml";
+open my $fh, '>', 'config.yaml';
 
 my %targets = (
     Template => 'template',
