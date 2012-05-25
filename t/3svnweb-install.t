@@ -23,10 +23,12 @@ for my $file (qw(config.yaml)) {
     ok(-f "$tmpdir/$file", "$tmpdir/$file created");
 }
 
-foreach my $dir (qw(css template)) {
+for my $dir (qw(css template)) {
     ok(-d "$tmpdir/$dir", "$tmpdir/$dir/ created");
 }
 
 my $config;
 $config = eval { YAML::LoadFile('config.yaml'); };
 ok(defined $config, "YAML::LoadFile('$tmpdir/config.yaml') succeeded");
+
+chdir($cwd);
