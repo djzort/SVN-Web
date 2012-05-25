@@ -241,6 +241,11 @@ sub recent_interesting_rev {
     my $ra = $self->{repos}{ra};
 
     my @log_result;
+
+    warn "RPATH( $path )";
+    warn "REV $rev";
+    warn "BASE PATH IS " . $ra->get_repos_root;
+
     $ra->get_log( [ $self->rpath($path) ],
         $rev, 1, 1, 0, 1, sub { @log_result = @_; } );
 
@@ -370,6 +375,8 @@ Exceptions, along with examples, are described in L<SVN::Web::X>.
 
 Copyright 2005-2007 by Nik Clayton C<< <nik@FreeBSD.org> >>.
 
+Copyright 2012 by Dean Hamstead C<< <dean@fragfest.com.au> >>.
+
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
@@ -379,9 +386,10 @@ See L<http://www.perl.com/perl/misc/Artistic.html>
 
 sub rpath {
     my ( $self, $p ) = @_;
-    my $path = $p || $self->{path};
+    # my $path = $p || $self->{path};
+    my $path = $p;
     $path =~ s{^/}{} if $path;
-    return $path;
+    return $path
 }
 
 1;

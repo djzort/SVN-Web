@@ -95,7 +95,7 @@ sub run {
         return;
     }
 
-    my $public_repos = $self->{opts}{public_repos_uri};
+    my $public_repos = $self->{opts}{public_repos_uri} || '';
     if (lc $public_repos eq 'hide_all') {
         for my $rep (values %repos) {
             undef $rep;

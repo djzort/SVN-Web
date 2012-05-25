@@ -117,7 +117,7 @@ sub get_config {
 my $repospool = SVN::Pool->new();
 
 sub get_repos {
-    my ($repos) = @_;
+    my $repos = shift;
 
     SVN::Web::X->throw(
         error => '(unconfigured repository)',
@@ -486,6 +486,7 @@ sub crack_url {
     # default action is 'browse'.
     unless ( defined $action ) {
             my @path = split( '/', $path_info );
+            warn "SPLIT PATH: ", join('|', @path);
             $action = $path[2] || 'browse';
     }
 
@@ -504,7 +505,7 @@ sub crack_url {
         }
         else {
             $path = $path_info;
-            $path =~ s{^/$action}{};
+            $path =~ s{^/$repo(/$action)?}{};
             $path =~ s{/+$}{} unless $path eq '/';
         }
     }
