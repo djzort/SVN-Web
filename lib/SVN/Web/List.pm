@@ -23,6 +23,7 @@ In F<config.yaml>
       class: SVN::Web::List
       opts:
         redirect_to_browse_when_one_repo: 0 # or 1
+        public_repos_uri: hide_local
     ...
 
 =head1 DESCRIPTION
@@ -43,6 +44,15 @@ should immediately issue a redirect to browse that repository, thereby saving
 the user a mouse click.
 
 Defaults to 0.
+
+=item public_repos_uri
+
+Can be 'hide_local', which will hide the URL for any file:// repositories,
+'hide_all', which will hide all repositories, or a hash.  The hash should be
+keyed by the repository name, and the values should be either a URL display, or
+a false value to hide the URL.
+
+The default is to show all repository URLs.
 
 =back
 
@@ -83,6 +93,27 @@ sub run {
         $url .= '/' . ( keys %repos )[0];
         print $self->{cgi}->redirect( -uri => $url );
         return;
+    }
+
+    my $public_repos = $self->{opts}{public_repos_uri};
+    if (lc $public_repos eq 'hide_all') {
+        for my $rep (values %repos) {
+            undef $rep;
+        }
+    }
+    elsif (lc $public_repos eq 'hide_local') {
+        for my $rep (values %repos) {
+            if ($rep =~ m{file://}) {
+                undef $rep;
+            }
+        }
+    }
+    elsif (ref $public_repos eq 'HASH') {
+        for my $repname (keys %repos) {
+            if (exists $public_repos->{$repname}) {
+                $repos{$repname} = $public_repos->{$repname};
+            }
+        }
     }
 
     return {
