@@ -1,9 +1,11 @@
 package SVN::Web::RSS;
-@ISA = qw(SVN::Web::Log);
 use strict;
+use warnings;
+
+my @ISA = qw(SVN::Web::Log);
 use SVN::Web::Log;
 
-our $VERSION = 0.53;
+our $VERSION = 0.54;
 
 =head1 NAME
 
@@ -100,6 +102,8 @@ sub run {
 Copyright 2003-2004 by Chia-liang Kao C<< <clkao@clkao.org> >>.
 
 Copyright 2005-2007 by Nik Clayton C<< <nik@FreeBSD.org> >>.
+
+Copyright 2012 by Dean Hamstead C<< <dean@fragfest.com.au> >>.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

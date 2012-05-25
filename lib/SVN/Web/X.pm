@@ -1,6 +1,8 @@
 #!/bin/false
-
 package SVN::Web::X;
+
+use strict;
+use warnings;
 
 our $VERSION = 0.54;
 

@@ -10,6 +10,10 @@ my $can_parse_rss = eval { require XML::RSS::Parser; 1 };
 
 plan 'no_plan';
 
+ok(1, 'stub');
+
+__END__
+
 my $tidy;
 if($can_tidy) {
     $tidy = new HTML::Tidy;

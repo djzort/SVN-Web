@@ -1,5 +1,8 @@
 package SVN::Web::action;
 
+use strict;
+use warnings;
+
 our $VERSION = 0.53;
 
 use POSIX qw();

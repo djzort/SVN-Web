@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 6;
+use Test::More tests => 5;
 use Cwd;
 use File::Temp qw(tempdir);
 use YAML ();
