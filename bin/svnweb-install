@@ -25,36 +25,6 @@ die "already have config.yaml" if -e 'config.yaml';
 
 open my $fh, '>', 'config.yaml';
 
-my %targets = (
-    Template => 'template',
-    Style    => 'css',
-);
-
-while(my($from, $to) = each %targets) {
-    my $path = $INC{'SVN/Web.pm'};
-    $path =~ s{\.pm$}{/$from}i or next;
-
-    find(
-        {
-            wanted => sub {
-                my $dst_path = $File::Find::name;
-                $dst_path =~ s/\Q$path\E/$to/;
-
-                if(-d $File::Find::name) {
-                    mkdir $dst_path
-                        or warn "mkdir($dst_path) failed: $!\n";
-                } else {
-                    copy($File::Find::name, $dst_path)
-                        or warn
-                        "Copying $File::Find::name -> $dst_path failed:\n$!\n";
-                }
-            },
-            no_chdir => 1
-        },
-        $path
-    );
-}
-
 print $fh <<END;
 version: $version
 
