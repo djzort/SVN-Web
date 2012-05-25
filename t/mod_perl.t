@@ -12,6 +12,10 @@ use Template;
 use SVN::Web::Test ();
 use SVN::Web::ConfigData;
 
+plan 'no_plan';
+
+ok(1, 'stub');
+
 __END__
 
 plan skip_all => q{mod_perl tests, disabled by installer}

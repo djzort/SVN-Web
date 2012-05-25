@@ -387,7 +387,6 @@ See L<http://www.perl.com/perl/misc/Artistic.html>
 sub rpath {
     my ( $self, $p ) = @_;
     my $path = $p || $self->{path};
-    my $path = $p;
     $path =~ s{^/}{} if $path;
     return $path
 }
