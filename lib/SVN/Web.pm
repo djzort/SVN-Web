@@ -92,7 +92,7 @@ sub canonicalise_config {
     $config->{cache}{opts}{directory_umask} =
       oct( $config->{cache}{opts}{directory_umask} )
       if exists $config->{cache}{opts}{directory_umask}
-          and $config->{cache}{opts}{directory_umask} =~ /^0/;
+          and $config->{cache}{opts}{directory_umask} =~ m/^0/;
 
     # Add any additional language directories
     if ( defined $config->{language_dirs} ) {
@@ -390,8 +390,6 @@ sub run_psgi {
     my $c = shift;
     my $env = shift;
     my $req = Plack::Request->new($env);
-
-    load_config('config.yaml');
 
     $template ||= get_template();
 
