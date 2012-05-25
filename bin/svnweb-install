@@ -83,6 +83,8 @@ actions:
     class: SVN::Web::Diff
   list:
     class: SVN::Web::List
+    opts:
+      public_repos_uri: hide_local
   log:
     class: SVN::Web::Log
     action_menu:

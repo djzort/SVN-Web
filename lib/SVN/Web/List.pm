@@ -7,7 +7,7 @@ use base 'SVN::Web::action';
 
 use File::Basename ();
 
-our $VERSION = 0.53;
+our $VERSION = 0.54;
 
 =head1 NAME
 
