@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 3;
 use Cwd;
 use File::Temp qw(tempdir);
 use YAML ();
@@ -21,10 +21,6 @@ system "$^X -I$cwd/blib/lib $cwd/bin/svnweb-install > /dev/null";
 
 for my $file (qw(config.yaml)) {
     ok(-f "$tmpdir/$file", "$tmpdir/$file created");
-}
-
-for my $dir (qw(css template)) {
-    ok(-d "$tmpdir/$dir", "$tmpdir/$dir/ created");
 }
 
 my $config;
