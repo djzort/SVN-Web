@@ -168,8 +168,7 @@ sub create_install {
     warn "Created $self->{install_dir}\n";
     my $cwd = POSIX::getcwd();
     chdir( $self->{install_dir} );
-    # my $lib_dir = File::Spec->catdir( $cwd, 'blib', 'lib' );
-    my $lib_dir = File::Spec->catdir( $cwd, 'lib' );
+    my $lib_dir = File::Spec->catdir( $cwd, 'blib', 'lib' );
     my $svnweb_install = File::Spec->catfile( $cwd, 'bin', 'svnweb-install' );
 
     system "$^X -I$lib_dir $svnweb_install";
