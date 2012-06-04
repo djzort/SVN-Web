@@ -20,6 +20,10 @@ you may need to make when updating an SVN::Web installation.
 
 Pulled out mod_perl1/2 and cgi, replaced with Plack. This probably broke lots of things.
 
+=item
+
+Changed to using Dist::Zilla with MakeMaker (due to .po issues with Module::Build)
+
 =item 
 
 Merged patch from rt26159
