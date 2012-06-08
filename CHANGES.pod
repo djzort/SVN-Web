@@ -19,6 +19,8 @@ you may need to make when updating an SVN::Web installation.
 =item
 
 RT24507 closed as the stand alone server was removed in favor of Plack.
+RT39707 closed as many perl SVN related issues were resolved elsewhere
+Included patch from RT32041 to authenticate to https
 
 =back
 
