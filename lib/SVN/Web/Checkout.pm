@@ -5,6 +5,7 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
 use SVN::Web::X;
 
 our $VERSION = 0.53;

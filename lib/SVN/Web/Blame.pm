@@ -5,6 +5,8 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
+
 our $VERSION = 0.53;
 
 =head1 NAME
@@ -145,7 +147,7 @@ sub run {
                 rev     => $_[1],
                 author  => $_[2],
                 date    => $self->format_svn_timestamp( $_[3] ),
-                line    => $_[4],
+                line    => Encode::decode('utf8',$_[4]),
               };
         }
     );

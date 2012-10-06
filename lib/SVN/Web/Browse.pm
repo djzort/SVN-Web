@@ -5,6 +5,7 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
 use SVN::Ra;
 use SVN::Client;
 use SVN::Web::X;
@@ -199,7 +200,7 @@ sub run {
             has_props => $dirent->has_props(),
             time      => $dirent->time() / 1_000_000,
             age => $current_time - ( $dirent->time() / 1_000_000 ),
-            msg => $log_result[4],
+            msg => Encode::decode('utf8',$log_result[4]),
           };
     }
 

@@ -5,6 +5,7 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
 use File::Temp;
 use SVN::Core;
 use SVN::Ra;
@@ -167,7 +168,7 @@ sub _log {
         rev    => $rev,
         author => $author,
         date   => $self->format_svn_timestamp($date),
-        msg    => $msg,
+        msg    => Encode::decode('utf8',$msg),
     };
 
     $data->{paths} = {
@@ -227,7 +228,7 @@ sub run {
         my $out_c;
         local $/ = undef;
         seek( $out_h, 0, 0 );
-        $out_c = <$out_h>;
+        $out_c = Encode::decode('utf8', <$out_h>);
 
         unlink($out_fn);
         unlink($err_fn);

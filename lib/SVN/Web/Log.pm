@@ -3,10 +3,11 @@ package SVN::Web::Log;
 use strict;
 use warnings;
 
+use base 'SVN::Web::action';
+
+use Encode ();
 use SVN::Core;
 use SVN::Ra;
-
-use base 'SVN::Web::action';
 
 our $VERSION = 0.53;
 
@@ -153,7 +154,7 @@ sub _log {
         rev    => $rev,
         author => $author,
         date   => $self->format_svn_timestamp($date),
-        msg    => $msg,
+        msg    => Encode::decode('utf8',$msg),
     };
 
     $data->{paths} = {

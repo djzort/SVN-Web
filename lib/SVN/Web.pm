@@ -4,6 +4,7 @@ package SVN::Web;
 use strict;
 use warnings;
 
+use Encode ();
 use URI::Escape;
 use SVN::Client;
 use SVN::Ra;
@@ -145,13 +146,13 @@ sub get_repos {
     # warn "REPO_URI: $repo_uri";
 
     eval {
-	my $client = SVN::Client->new( pool => $repospool );
-	my $auth = $client->auth;
+        my $client = SVN::Client->new( pool => $repospool );
+        my $auth = $client->auth;
         $REPOS{$repos}{uri} ||= $repo_uri;
         $REPOS{$repos}{ra}  ||= SVN::Ra->new(
             url  => $repo_uri,
             pool => $repospool,
-	    auth => $auth,
+            auth => $auth,
         );
     };
 
@@ -334,7 +335,6 @@ sub psgi_output {
     my $res = $req->new_response(200);
     $res->cookies->{ 'svnweb-lang' } = $cfg->{lang};
 
-    $res->content_type('text/html');
 
     if ( ref $html ) {
 
@@ -348,14 +348,17 @@ sub psgi_output {
                     %{ $html->{data} }
                 }, \$body
             ) or die "Template::process() error: " . $template->error;
-            $res->body( $body );
+
+            $res->content_type('text/html; charset=utf-8');
+            $res->body(Encode::encode('utf8',$body));
         }
         else {
-            $res->body( $html->{body} );
+            $res->content_type($html->{mimetype} || 'text/plain');
+            $res->body($html->{body});
         }
     }
     else {
-
+        $res->content_type('text/plain');
         $res->body($html);
     }
 
@@ -370,7 +373,8 @@ sub get_template {
             COMPILE_DIR  => $config->{tt_compile_dir},
             PRE_CHOMP    => 2,
             POST_CHOMP   => 2,
-            FILTERS      => { l => ( [ \&loc_filter, 1 ] ), }
+            FILTERS      => { l => ( [ \&loc_filter, 1 ] ), },
+            ENCODING     => 'utf8',
         }
     );
 }

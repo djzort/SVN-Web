@@ -7,8 +7,8 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
 use File::Temp;
-
 use SVN::Core;
 use SVN::Ra;
 use SVN::Client;
@@ -233,11 +233,12 @@ sub run {
 
     if ( $mime eq 'text/html' ) {
         use SVN::Web::DiffParser;
+        my $out = Encode::decode('utf8',$out_c);
         my $diff;
-        my $diff_size = length($out_c);
+        my $diff_size = length($out);
         my $max_diff_size = $self->{opts}{max_diff_size} || 0;
         if ( $diff_size <= $max_diff_size ) {
-            $diff = SVN::Web::DiffParser->new($out_c);
+            $diff = SVN::Web::DiffParser->new($out);
         }
 
         return {

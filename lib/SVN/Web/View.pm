@@ -5,6 +5,8 @@ use warnings;
 
 use base 'SVN::Web::action';
 
+use Encode ();
+
 our $VERSION = 0.53;
 
 =head1 NAME
@@ -109,7 +111,7 @@ sub _log {
         rev    => $rev,
         author => $author,
         date   => $self->format_svn_timestamp($date),
-        msg    => $msg
+        msg    => Encode::decode('utf8',$msg),
     };
 }
 
@@ -142,6 +144,7 @@ sub run {
     open( $fh, '>', \$fc );
     $ctx->cat( $fh, $uri . $path, $rev );
     close($fc);
+    $fc = Encode::decode('utf8', $fc);
 
     my $mime_type;
     my $props = $ctx->propget( 'svn:mime-type', $uri . $path, $rev, 0 );
