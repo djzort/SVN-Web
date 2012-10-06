@@ -203,7 +203,7 @@ sub walk_site {
         my $link_url = $links[$i]->url_abs;
 
         diag sprintf "Fetching %d/%d %s (%s)",
-          $i + 1, $#links + 1, $link_url, $links[$i]->text()
+          $i + 1, $#links + 1, $link_url, $links[$i]->text()||''
           if exists $ENV{TEST_VERBOSE} and $ENV{TEST_VERBOSE};
 
         next if $seen->{$link_url};

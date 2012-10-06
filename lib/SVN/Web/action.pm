@@ -392,4 +392,42 @@ sub rpath {
     return $path
 }
 
+sub ctx_info {
+    my $self = shift;
+    my $uri = shift;
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->info( $uri, @_ );
+}
+
+sub ctx_ls {
+    my $self = shift;
+    my $uri = shift;
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->ls( $uri, @_ );
+}
+
+sub ctx_revprop_get {
+    my ($self, $prop_name, $uri, $rev) = @_;
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->revprop_get( $prop_name, $uri, $rev );
+}
+
+sub ctx_propget {
+    my ($self, $prop_name, $uri, $rev, $recursive) = splice(@_,0,5);
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->propget( $prop_name, $uri, $rev, $recursive, @_ );
+}
+
+sub ctx_cat {
+    my ($self, $fh, $uri, $rev) = @_;
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->cat( $fh, $uri, $rev );
+}
+
+sub ctx_blame {
+    my ($self, $uri, $start_rev, $end_rev, $cb) = splice(@_,0,5);
+    $uri =~ s/ /%20/g;
+    return $self->{repos}{client}->blame( $uri, $start_rev, $end_rev, $cb, @_ );
+}
+
 1;

@@ -68,7 +68,7 @@ sub run {
     my $path = $self->{path};
 
     my $node_kind;
-    $ctx->info( "$uri$path", $rev, $rev, sub { $node_kind = $_[1]->kind(); },
+    $self->ctx_info( "$uri$path", $rev, $rev, sub { $node_kind = $_[1]->kind(); },
         0 );
 
     if ( $node_kind != $SVN::Node::file ) {
@@ -80,11 +80,11 @@ sub run {
 
     my ( $fh, $fc ) = ( undef, '' );
     open( $fh, '>', \$fc );
-    $ctx->cat( $fh, $uri . $path, $rev );
+    $self->ctx_cat( $fh, $uri . $path, $rev );
     close($fh);
 
     my $mime_type;
-    my $props = $ctx->propget( 'svn:mime-type', $uri . $path, $rev, 0 );
+    my $props = $self->ctx_propget( 'svn:mime-type', $uri . $path, $rev, 0 );
     if ( exists $props->{ $uri . $path } ) {
         $mime_type = $props->{ $uri . $path };
     }

@@ -157,7 +157,7 @@ sub run {
     my $rev = $act_rev;
 
     my $node_kind;
-    $ctx->info( $uri, $rev, $rev, sub { $node_kind = $_[1]->kind(); }, 0 );
+    $self->ctx_info( $uri, $rev, $rev, sub { $node_kind = $_[1]->kind(); }, 0 );
 
     if ( $node_kind == $SVN::Node::none ) {
         SVN::Web::X->throw(
@@ -173,7 +173,7 @@ sub run {
         );
     }
 
-    my $dirents = $ctx->ls( $uri, $rev, 0 );
+    my $dirents = $self->ctx_ls( $uri, $rev, 0 );
 
     my $entries = [];
     my ( $name, $dirent );
@@ -210,7 +210,7 @@ sub run {
 
     my @props = ();
     foreach my $prop_name (qw(svn:externals)) {
-        my $prop_value = ( $ctx->revprop_get( $prop_name, $uri, $rev ) )[0];
+        my $prop_value = ( $self->ctx_revprop_get( $prop_name, $uri, $rev ) )[0];
         if ( defined $prop_value ) {
             $prop_value =~ s/\s*\n$//ms;
             push @props, { name => $prop_name, value => $prop_value };

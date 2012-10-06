@@ -234,7 +234,7 @@ sub run {
     #    $self->_resolve_changed_paths();
 
     my $is_dir;
-    $ctx->info(
+    $self->ctx_info(
         "$uri$path",
         $rev, $rev,
         sub {
