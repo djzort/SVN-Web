@@ -144,14 +144,8 @@ sub cache_key {
 
 sub run {
     my $self = shift;
-    my $ctx  = $self->{repos}{client};
-    my $ra   = $self->{repos}{ra};
-    my $path = $self->{path};
-
-    my $uri =
-        $path eq '/'
-      ? $self->{repos}{uri}
-      : $self->{repos}{uri} . $path;
+    my $uri = $self->{repos}{uri};
+    $uri .= '/'.$self->rpath if $self->rpath;
 
     my ( $exp_rev, $yng_rev, $act_rev, $at_head ) = $self->get_revs();
 
@@ -162,14 +156,14 @@ sub run {
     if ( $node_kind == $SVN::Node::none ) {
         SVN::Web::X->throw(
             error => '(path %1 does not exist in revision %2)',
-            vars  => [ $path, $rev ]
+            vars  => [ $self->rpath, $rev ]
         );
     }
 
     if ( $node_kind != $SVN::Node::dir ) {
         SVN::Web::X->throw(
             error => '(path %1 is not a directory in revision %2)',
-            vars  => [ $path, $rev ],
+            vars  => [ $self->rpath, $rev ],
         );
     }
 
@@ -179,22 +173,19 @@ sub run {
     my ( $name, $dirent );
     my $current_time = time();
 
+    my $base_path = $self->rpath;
     while ( ( $name, $dirent ) = each %{$dirents} ) {
-        my $kind = $dirent->kind();
-        my $entry_path = 
-          $path eq '/'
-          ? "$path$name"
-          : "$path/$name";
+        my $node_kind = $dirent->kind();
 
-        my @log_result = $self->recent_interesting_rev( $entry_path, $rev );
+        my @log_result = $self->recent_interesting_rev( "$base_path/$name", $rev );
 
         push @{$entries},
           {
             name      => $name,
             rev       => $log_result[1],
-            kind      => $kind,
-            isdir     => ( $kind == $SVN::Node::dir ),
-            size      => ( $kind == $SVN::Node::dir ? '' : $dirent->size() ),
+            kind      => $node_kind,
+            isdir     => ( $node_kind == $SVN::Node::dir ),
+            size      => ( $node_kind == $SVN::Node::dir ? '' : $dirent->size() ),
             author    => $dirent->last_author(),
             has_props => $dirent->has_props(),
             time      => $dirent->time() / 1_000_000,

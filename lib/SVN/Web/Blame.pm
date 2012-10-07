@@ -126,10 +126,7 @@ sub cache_key {
 
 sub run {
     my $self = shift;
-    my $ctx  = $self->{repos}{client};
-    my $ra   = $self->{repos}{ra};
-    my $uri  = $self->{repos}{uri};
-    my $path = $self->{path};
+    my $uri  = $self->{repos}{uri} . $self->{path};
 
     my ( $exp_rev, $yng_rev, $act_rev, $head ) = $self->get_revs();
 
@@ -138,7 +135,7 @@ sub run {
     my @blame_details;
 
     $self->ctx_blame(
-        "$uri$path",
+        $uri,
         1, $rev,
         sub {
             push @blame_details,
@@ -153,9 +150,9 @@ sub run {
     );
 
     my $mime_type;
-    my $props = $self->ctx_propget( 'svn:mime-type', $uri . $path, $rev, 0 );
-    if ( exists $props->{ $uri . $path } ) {
-        $mime_type = $props->{ $uri . $path };
+    my $props = $self->ctx_propget( 'svn:mime-type', $uri, $rev, 0 );
+    if ( exists $props->{$uri} ) {
+        $mime_type = $props->{$uri};
     }
     else {
         $mime_type = 'text/plain';

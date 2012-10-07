@@ -199,8 +199,9 @@ sub run {
 
     my $ctx  = $self->{repos}{client};
     my $ra   = $self->{repos}{ra};
-    my $uri  = $self->{repos}{uri};
     my $yrev = $ra->get_latest_revnum();
+
+    my $uri  = $self->{repos}{uri};
 
     my $rev           = $self->{cgi}->param('rev');
     my $max_diff_size = $self->{opts}{max_diff_size};
@@ -264,22 +265,20 @@ sub run {
 # XXX Very similar code in Log.pm, needs refactoring
 sub _resolve_changed_paths {
     my $self    = shift;
-    my $ctx     = $self->{repos}{client};
-    my $ra      = $self->{repos}{ra};
     my $uri     = $self->{repos}{uri};
-    my $subpool = SVN::Pool->new();
     my $data    = $self->{REV};
 
+    my $subpool = SVN::Pool->new();
     # Set the 'isdir' key
     foreach my $path ( keys %{ $data->{paths} } ) {
-        $subpool->clear();
-
         # Ignore deleted nodes
         if ( $data->{paths}{$path}{action} ne 'D' ) {
             my $node_kind = $self->svn_get_node_kind("$uri$path", $data->{rev}, $data->{rev}, $subpool);
 
             $data->{paths}{$path}{isdir} = $node_kind == $SVN::Node::dir;
         }
+
+        $subpool->clear();
     }
 }
 

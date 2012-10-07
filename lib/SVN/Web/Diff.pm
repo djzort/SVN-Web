@@ -180,7 +180,7 @@ sub run {
     my $ctx  = $self->{repos}{client};
     my $ra   = $self->{repos}{ra};
     my $uri  = $self->{repos}{uri};
-    my $path = $self->{path};
+    $uri .= '/'.$self->rpath if $self->rpath;
 
     my ( undef, undef, undef, $at_head ) = $self->get_revs();
 
@@ -193,18 +193,18 @@ sub run {
 
     SVN::Web::X->throw(
         error => '(cannot diff nodes of different types: %1 %2 %3)',
-        vars  => [ $path, $rev1, $rev2 ]
+        vars  => [ $self->rpath, $rev1, $rev2 ]
     ) if $types{$rev1} != $types{$rev2};
 
     foreach my $rev ( $rev1, $rev2 ) {
         SVN::Web::X->throw(
             error => '(path %1 does not exist in revision %2)',
-            vars  => [ $path, $rev ]
+            vars  => [ $self->rpath, $rev ]
         ) if $types{$rev} == $SVN::Node::none;
 
         SVN::Web::X->throw(
             error => '(path %1 is a directory at rev %2)',
-            vars  => [ $path, $rev ]
+            vars  => [ $self->rpath, $rev ]
         ) if $types{$rev} == $SVN::Node::dir;
     }
 
@@ -215,8 +215,7 @@ sub run {
     my ( $out_h, $out_fn ) = File::Temp::tempfile();
     my ( $err_h, $err_fn ) = File::Temp::tempfile();
 
-    $ctx->diff( [], "$uri$path", $rev1, "$uri$path", $rev2, 0, 1, 0, $out_h,
-        $err_h );
+    $ctx->diff( [], $uri, $rev1, $uri, $rev2, 0, 1, 0, $out_h, $err_h );
 
     my $out_c;
     local $/ = undef;
