@@ -6,7 +6,6 @@ use warnings;
 use base 'SVN::Web::action';
 
 use Encode ();
-use File::Temp;
 use SVN::Core;
 use SVN::Ra;
 use SVN::Web::X;
@@ -197,7 +196,6 @@ sub run {
 
     $self->{opts} = { %default_opts, %{ $self->{opts} } };
 
-    my $ctx  = $self->{repos}{client};
     my $ra   = $self->{repos}{ra};
     my $yrev = $ra->get_latest_revnum();
 
@@ -221,24 +219,10 @@ sub run {
     my $diff;
     my $diff_size = 0;
     if ( $self->{opts}{show_diff} ) {
-        my ( $out_h, $out_fn ) = File::Temp::tempfile();
-        my ( $err_h, $err_fn ) = File::Temp::tempfile();
-
-        $ctx->diff( [], $uri, $rev - 1, $uri, $rev, 1, 1, 0, $out_h, $err_h );
-
-        my $out_c;
-        local $/ = undef;
-        seek( $out_h, 0, 0 );
-        $out_c = Encode::decode('utf8', <$out_h>);
-
-        unlink($out_fn);
-        unlink($err_fn);
-        close($out_h);
-        close($err_h);
-
-        $diff_size = length($out_c);
+        my $out = Encode::decode('utf8', $self->svn_get_diff($uri, $rev - 1, $uri, $rev, 1));
+        $diff_size = length($out);
         if ( $diff_size <= $max_diff_size ) {
-            $diff = SVN::Web::DiffParser->new($out_c);
+            $diff = SVN::Web::DiffParser->new($out);
         }
     }
 

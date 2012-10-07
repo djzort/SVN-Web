@@ -8,10 +8,10 @@ use warnings;
 use base 'SVN::Web::action';
 
 use Encode ();
-use File::Temp;
 use SVN::Core;
 use SVN::Ra;
 use SVN::Client;
+use SVN::Web::DiffParser;
 use SVN::Web::X;
 use List::Util qw(max min);
 
@@ -212,27 +212,8 @@ sub run {
     $mime eq 'text/html'  and $style = 'Text::Diff::HTML';
     $mime eq 'text/plain' and $style = 'Unified';
 
-    my ( $out_h, $out_fn ) = File::Temp::tempfile();
-    my ( $err_h, $err_fn ) = File::Temp::tempfile();
-
-    $ctx->diff( [], $uri, $rev1, $uri, $rev2, 0, 1, 0, $out_h, $err_h );
-
-    my $out_c;
-    local $/ = undef;
-    seek( $out_h, 0, 0 );
-    $out_c = <$out_h>;
-
-    unlink($out_fn);
-    unlink($err_fn);
-    close($out_h);
-    close($err_h);
-
-    my $diff_size     = length($out_c);
-    my $max_diff_size = $self->{opts}{max_diff_size};
-
     if ( $mime eq 'text/html' ) {
-        use SVN::Web::DiffParser;
-        my $out = Encode::decode('utf8',$out_c);
+        my $out = Encode::decode('utf8',$self->svn_get_diff($uri, $rev1, $uri, $rev2, 0));
         my $diff;
         my $diff_size = length($out);
         my $max_diff_size = $self->{opts}{max_diff_size} || 0;
@@ -256,7 +237,7 @@ sub run {
     else {
         return {
             mimetype => $mime,
-            body     => $out_c,
+            body     => $self->svn_get_diff($uri, $rev1, $uri, $rev2, 0),
         };
     }
 }

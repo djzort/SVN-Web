@@ -5,9 +5,10 @@ use warnings;
 
 our $VERSION = 0.53;
 
-use POSIX qw();
+use File::Temp ();
+use POSIX ();
 use Time::Local qw(timegm_nocheck);
-use Time::Zone qw();
+use Time::Zone ();
 
 use SVN::Core;
 
@@ -403,6 +404,26 @@ sub svn_get_node_kind {
     $self->{repos}{client}->info(@args);
 
     return $node_kind;
+}
+
+sub svn_get_diff {
+    my ($self, $target1, $rev1, $target2, $rev2, $recursive, $pool) = @_;
+
+    my ( $out_h, $out_fn ) = File::Temp::tempfile();
+    my ( $err_h, $err_fn ) = File::Temp::tempfile();
+
+    my @args = ([], $target1, $rev1, $target2, $rev2, $recursive, 1, 0, $out_h, $err_h);
+    push @args, $pool if $pool;
+    $self->{repos}{client}->diff(@args);
+
+    my $out;
+    local $/ = undef;
+    seek($out_h, 0, 0);
+    $out = <$out_h>;
+    unlink( $out_fn ); unlink( $err_fn );
+    close( $out_h ); close( $err_h );
+
+    return $out;
 }
 
 sub ctx_ls {
