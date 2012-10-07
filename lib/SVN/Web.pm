@@ -229,7 +229,7 @@ sub run {
     }
 
     if ( $cfg->{repos} && $REPOS{ $cfg->{repos} } ) {
-        @{ $cfg->{navpaths} } = File::Spec::Unix->splitdir( $cfg->{path} );
+        @{ $cfg->{navpaths} } = map { uri_escape($_) } File::Spec::Unix->splitdir( $cfg->{path} );
         shift @{ $cfg->{navpaths} };
 
         # should use attribute or things alike
@@ -373,7 +373,10 @@ sub get_template {
             COMPILE_DIR  => $config->{tt_compile_dir},
             PRE_CHOMP    => 2,
             POST_CHOMP   => 2,
-            FILTERS      => { l => ( [ \&loc_filter, 1 ] ), },
+            FILTERS      => {
+                l => ( [ \&loc_filter, 1 ] ),
+                anchor => ( [ \&anchor_filter, 1 ] ),
+            },
             ENCODING     => 'utf8',
         }
     );
@@ -433,6 +436,15 @@ sub loc_filter {
     my $context = shift;
     my @args    = @_;
     return sub { SVN::Web::I18N::loc( $_[0], @args ) };
+}
+
+sub anchor_filter {
+    my $context = shift;
+    return sub {
+        my $str = shift;
+        $str =~ s/[\/% ]/_/g;
+        return $str;
+    };
 }
 
 # Crack a URL and determine the components we need.

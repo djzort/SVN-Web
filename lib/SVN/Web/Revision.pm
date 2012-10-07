@@ -278,7 +278,7 @@ sub _resolve_changed_paths {
 
         # Ignore deleted nodes
         if ( $data->{paths}{$path}{action} ne 'D' ) {
-            $ctx->info( "$uri$path", $data->{rev}, $data->{rev},
+            $self->ctx_info( "$uri$path", $data->{rev}, $data->{rev},
                 sub { $node_kind = $_[1]->kind() },
                 0, $subpool );
 

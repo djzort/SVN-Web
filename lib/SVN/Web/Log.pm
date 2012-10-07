@@ -235,7 +235,7 @@ sub run {
     #    $self->_resolve_changed_paths();
 
     my $is_dir;
-    $ctx->info(
+    $self->ctx_info(
         "$uri$path",
         $rev, $rev,
         sub {
@@ -281,7 +281,7 @@ sub _resolve_changed_paths {
         foreach my $path ( keys %{ $data->{paths} } ) {
             $subpool->clear();
 
-            $ctx->info( "$uri$path", $data->{rev}, $data->{rev},
+            $self->ctx_info( "$uri$path", $data->{rev}, $data->{rev},
                 sub { $node_kind = $_[1]->kind() },
                 0, $subpool );
 

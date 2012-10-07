@@ -313,8 +313,7 @@ sub _unified_line {
         return;
     }
 
-    die "Missing \@\@ line before $line at $self->{state}{context}\n"
-      unless exists $change->{line1} and defined $change->{line1};
+    return unless exists $change->{line1} and defined $change->{line1};
 
     if ( $line =~ /^([-+ ])(.*)$/ ) {
         my ( $mod, $text ) = ( $1, $2 );

@@ -1,4 +1,3 @@
-VN-Web.psgi
 use SVN::Web;
 
 # load config

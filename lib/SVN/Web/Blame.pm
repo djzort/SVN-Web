@@ -137,7 +137,7 @@ sub run {
 
     my @blame_details;
 
-    $ctx->blame(
+    $self->ctx_blame(
         "$uri$path",
         1, $rev,
         sub {
@@ -153,7 +153,7 @@ sub run {
     );
 
     my $mime_type;
-    my $props = $ctx->propget( 'svn:mime-type', $uri . $path, $rev, 0 );
+    my $props = $self->ctx_propget( 'svn:mime-type', $uri . $path, $rev, 0 );
     if ( exists $props->{ $uri . $path } ) {
         $mime_type = $props->{ $uri . $path };
     }
