@@ -165,7 +165,7 @@ sub create_install {
     my $self = shift;
 
     $self->{install_dir} = tempdir( CLEANUP => 1 );
-    warn "Created $self->{install_dir}\n";
+    #warn "Created $self->{install_dir}\n";
     my $cwd = POSIX::getcwd();
     chdir( $self->{install_dir} );
     my $lib_dir = File::Spec->catdir( $cwd, 'blib', 'lib' );

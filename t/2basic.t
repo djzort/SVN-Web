@@ -58,10 +58,10 @@ $mech->get('http://localhost/svnweb/');
 $mech->title_is('Repository List (via SVN::Web)', "'list' has correct title")
     or diag $mech->content();
 
-diag "Recursively checking all links";
+note "Recursively checking all links";
 
 my $test_sub = sub {
-    diag('skip static files checks in local tests: '.$mech->uri), return
+    note('skip static files checks in local tests: '.$mech->uri), return
         if $mech->uri->path eq '/' or $mech->uri->path =~ m{/css/};
 
     is($mech->status, 200, 'Fetched ' . $mech->uri())
