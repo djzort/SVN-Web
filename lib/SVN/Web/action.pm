@@ -408,6 +408,8 @@ sub svn_get_node_kind {
 
 sub svn_get_diff {
     my ($self, $target1, $rev1, $target2, $rev2, $recursive, $pool) = @_;
+    $target1 =~ s/ /%20/g;
+    $target2 =~ s/ /%20/g;
 
     my ( $out_h, $out_fn ) = File::Temp::tempfile();
     my ( $err_h, $err_fn ) = File::Temp::tempfile();
