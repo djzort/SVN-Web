@@ -236,20 +236,13 @@ to a log message receiver.
 =cut
 
 sub recent_interesting_rev {
-    my $self = shift;
-    my $path = shift;
-    my $rev  = shift;
+    my ($self, $path, $rev) = @_;
 
     my $ra = $self->{repos}{ra};
 
     my @log_result;
 
-    # warn "RPATH( $path )";
-    # warn "REV $rev";
-    # warn "BASE PATH IS " . $ra->get_repos_root;
-
-    $ra->get_log( [ $self->rpath($path) ],
-        $rev, 1, 1, 0, 1, sub { @log_result = @_; } );
+    $ra->get_log( [ $self->rpath($path) ], $rev, 1, 1, 0, 1, sub { @log_result = @_; } );
 
     return @log_result if wantarray();
     return $log_result[1];    # Revision number

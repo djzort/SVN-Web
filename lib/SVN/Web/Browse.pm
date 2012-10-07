@@ -189,8 +189,8 @@ sub run {
             author    => $dirent->last_author(),
             has_props => $dirent->has_props(),
             time      => $dirent->time() / 1_000_000,
-            age => $current_time - ( $dirent->time() / 1_000_000 ),
-            msg => Encode::decode('utf8',$log_result[4]),
+            age       => $current_time - ( $dirent->time() / 1_000_000 ),
+            msg       => Encode::decode('utf8',$log_result[4]),
           };
     }
 
