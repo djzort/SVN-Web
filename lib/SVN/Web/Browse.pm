@@ -157,8 +157,7 @@ sub run {
 
     my $rev = $act_rev;
 
-    my $node_kind;
-    $self->ctx_info( $uri, $rev, $rev, sub { $node_kind = $_[1]->kind(); }, 0 );
+    my $node_kind = $self->svn_get_node_kind($uri, $rev, $rev);
 
     if ( $node_kind == $SVN::Node::none ) {
         SVN::Web::X->throw(

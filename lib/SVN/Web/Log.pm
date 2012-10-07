@@ -233,17 +233,8 @@ sub run {
     }
 
     #    $self->_resolve_changed_paths();
-
-    my $is_dir;
-    $self->ctx_info(
-        "$uri$path",
-        $rev, $rev,
-        sub {
-            my ( $path, $info, $pool ) = @_;
-            $is_dir = $info->kind() == $SVN::Node::dir;
-        },
-        0
-    );
+    my $node_kind = $self->svn_get_node_kind("$uri$path", $rev, $rev);
+    my $is_dir = $node_kind == $SVN::Node::dir;
 
     return {
         template => 'log',
@@ -275,15 +266,12 @@ sub _resolve_changed_paths {
     my $uri  = $self->{repos}{uri};
 
     my $subpool = SVN::Pool->new();
-    my $node_kind;
 
     foreach my $data ( @{ $self->{REVS} } ) {
         foreach my $path ( keys %{ $data->{paths} } ) {
             $subpool->clear();
 
-            $self->ctx_info( "$uri$path", $data->{rev}, $data->{rev},
-                sub { $node_kind = $_[1]->kind() },
-                0, $subpool );
+            my $node_kind = $self->svn_get_node_kind("$uri$path", $data->{rev}, $data->{rev}, $subpool);
 
             $data->{paths}{$path}{isdir} = $node_kind == $SVN::Node::dir;
         }

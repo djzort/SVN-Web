@@ -270,17 +270,13 @@ sub _resolve_changed_paths {
     my $subpool = SVN::Pool->new();
     my $data    = $self->{REV};
 
-    my $node_kind;
-
     # Set the 'isdir' key
     foreach my $path ( keys %{ $data->{paths} } ) {
         $subpool->clear();
 
         # Ignore deleted nodes
         if ( $data->{paths}{$path}{action} ne 'D' ) {
-            $self->ctx_info( "$uri$path", $data->{rev}, $data->{rev},
-                sub { $node_kind = $_[1]->kind() },
-                0, $subpool );
+            my $node_kind = $self->svn_get_node_kind("$uri$path", $data->{rev}, $data->{rev}, $subpool);
 
             $data->{paths}{$path}{isdir} = $node_kind == $SVN::Node::dir;
         }

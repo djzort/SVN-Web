@@ -68,9 +68,7 @@ sub run {
     my $rev  = $self->{cgi}->param('rev') || $ra->get_latest_revnum();
     my $path = $self->{path};
 
-    my $node_kind;
-    $self->ctx_info( "$uri$path", $rev, $rev, sub { $node_kind = $_[1]->kind(); },
-        0 );
+    my $node_kind = $self->svn_get_node_kind("$uri$path", $rev, $rev);
 
     if ( $node_kind != $SVN::Node::file ) {
         SVN::Web::X->throw(
