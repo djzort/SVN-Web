@@ -15,7 +15,7 @@ use SVN::Web::DiffParser;
 use SVN::Web::X;
 use List::Util qw(max min);
 
-our $VERSION = 0.53;
+our $VERSION = 0.62;
 
 =head1 NAME
 

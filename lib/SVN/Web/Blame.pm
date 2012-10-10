@@ -7,7 +7,7 @@ use base 'SVN::Web::action';
 
 use Encode ();
 
-our $VERSION = 0.53;
+our $VERSION = 0.62;
 
 =head1 NAME
 
