@@ -3,7 +3,7 @@ package SVN::Web::action;
 use strict;
 use warnings;
 
-our $VERSION = 0.53;
+our $VERSION = 0.62;
 
 use File::Temp ();
 use POSIX ();

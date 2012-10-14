@@ -9,7 +9,7 @@ use Encode ();
 use SVN::Core;
 use SVN::Ra;
 
-our $VERSION = 0.53;
+our $VERSION = 0.62;
 
 =head1 NAME
 

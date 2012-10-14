@@ -8,7 +8,7 @@ use base 'SVN::Web::action';
 use Encode ();
 use SVN::Web::X;
 
-our $VERSION = 0.53;
+our $VERSION = 0.62;
 
 =head1 NAME
 
