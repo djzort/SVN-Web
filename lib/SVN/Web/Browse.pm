@@ -170,11 +170,11 @@ sub run {
     my $dirents = $self->ctx_ls( $uri, $rev, 0 );
 
     my $entries = [];
-    my ( $name, $dirent );
     my $current_time = time();
 
     my $base_path = $self->rpath;
-    while ( ( $name, $dirent ) = each %{$dirents} ) {
+    while ( my ( $svn_name, $dirent ) = each %{$dirents} ) {
+        my $name = Encode::decode('utf8',$svn_name);
         my $node_kind = $dirent->kind();
 
         my @log_result = $self->recent_interesting_rev( "$base_path/$name", $rev );
