@@ -172,7 +172,7 @@ sub _log {
 
     $data->{paths} = {
         map {
-            $_ => {
+            $self->decode_svn_uri($_) => {
                 action      => $paths->{$_}->action(),
                 copyfrom    => $paths->{$_}->copyfrom_path(),
                 copyfromrev => $paths->{$_}->copyfrom_rev(),
