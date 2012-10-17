@@ -26,7 +26,7 @@ SVN::Web::I18N::add_directory(
     File::Spec->catdir( substr( __FILE__, 0, -3 ), 'I18N' ) );
 SVN::Web::I18N::loc_lang('en');
 
-our $VERSION = 0.62;
+our $VERSION = 0.63;
 
 my $template;
 my $config;
