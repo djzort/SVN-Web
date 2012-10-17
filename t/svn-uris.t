@@ -1,5 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+
 use strict;
+use warnings;
 
 use Encode qw(encode decode);
 use Test::More;
